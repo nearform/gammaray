@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/dgonzalez/gammaray/vulnfetcher"
 )
@@ -26,6 +27,7 @@ type OSSVulnerability struct {
 	Description string   `json:"description"`
 	CVE         string   `json:"cve"`
 	Versions    []string `json:"versions"`
+	References  []string `json:"references"`
 }
 
 // OSSIndexFetcher fetches the node.js security vulnerabilities
@@ -73,6 +75,8 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 			CVE:         vulnerability.CVE,
 			Title:       vulnerability.Title,
 			Description: vulnerability.Description,
+			Versions:    strings.Join(vulnerability.Versions, " "),
+			References:  "[ " + strings.Join(vulnerability.References, " ") + " ]\n",
 		}
 		vulnerabilities = append(vulnerabilities, processedVulnerability)
 	}

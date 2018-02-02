@@ -5,6 +5,8 @@ type Vulnerability struct {
 	CVE         string
 	Title       string
 	Description string
+	Versions    string
+	References  string
 }
 
 // VulnFetcher fetches vulnerabilities
