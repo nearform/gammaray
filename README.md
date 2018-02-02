@@ -8,7 +8,7 @@ Analysis of vulnerabilities in node.js applications.
 go get github.com/dgonzalez/gammaray
 ```
 
-## Usage
+## Usage
 
 Run:
 
