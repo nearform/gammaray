@@ -8,6 +8,12 @@
   version = "v0.4.7"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/docker/distribution"
   packages = ["digest","reference"]
   revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
@@ -32,16 +38,40 @@
   version = "v0.3.2"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/dsnet/compress"
+  packages = [".","bzip2","bzip2/internal/sais","internal","internal/errors","internal/prefix"]
+  revision = "cc9eb1d7ad760af14e8f918698f745e80377af4f"
+
+[[projects]]
+  name = "github.com/mholt/archiver"
+  packages = ["."]
+  revision = "cdc68dd1f170b8dfc1a0d2231b5bb0967ed67006"
+  version = "v2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/nwaples/rardecode"
+  packages = ["."]
+  revision = "e06696f847aeda6f39a8f0b7cdff193b7690aef6"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/ulikunitz/xz"
+  packages = [".","internal/hash","internal/xlog","lzma"]
+  revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
+  version = "v0.5.4"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","proxy"]
-  revision = "b417086c80e91bfa321ef761574721644b8b9f61"
+  revision = "2fb46b16b8dda405028c50f7c7f0f9dd1fa6bfb1"
 
 [[projects]]
   branch = "master"
@@ -52,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c1a7c6050e9c51f3b8afd098a378d85572db4eb2bb47b98a5459db37793b0ae4"
+  inputs-digest = "9a3e2b5e1251887f01fc2d4ce5d017ccfc23da3970bcad8c3b36036308e7e377"
   solver-name = "gps-cdcl"
   solver-version = 1

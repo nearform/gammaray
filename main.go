@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dgonzalez/gammaray/docker"
 	"github.com/dgonzalez/gammaray/pathrunner"
 	"github.com/dgonzalez/gammaray/vulnfetcher/ossvulnfetcher"
 )
@@ -12,6 +13,11 @@ import (
 const OSSIndexURL = "https://ossindex.net/v2.0/package"
 
 func main() {
+	docker.ScanImage("eu.gcr.io/david-on-microservices/aggregator")
+
+}
+
+func main2() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: gammaray <folder>")
 		os.Exit(1)
