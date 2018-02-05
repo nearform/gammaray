@@ -11,6 +11,6 @@ type Vulnerability struct {
 
 // VulnFetcher fetches vulnerabilities
 type VulnFetcher interface {
-	Fetch()
+	Fetch() error
 	Test(component string, version string) ([]Vulnerability, error)
 }
