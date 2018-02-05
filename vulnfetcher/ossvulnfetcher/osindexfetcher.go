@@ -3,6 +3,7 @@ package ossvulnfetcher
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -55,6 +56,10 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 	response, err := http.Post(n.URL, "application/json", bytes.NewReader(data))
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode >= 500 {
+		return nil, errors.New("Error: OSSIndex is unavailable")
 	}
 
 	responseData, err := ioutil.ReadAll(response.Body)

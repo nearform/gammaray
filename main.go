@@ -19,14 +19,16 @@ func main() {
 
 	packages, err := pathrunner.Walk(os.Args[1])
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	fetcher := ossvulnfetcher.New(OSSIndexURL)
 	for _, singlePackage := range packages {
 		vulnerabilities, err := fetcher.Test(singlePackage.Name, singlePackage.Version)
 		if err != nil {
-			panic(err)
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
 
 		if len(vulnerabilities) > 0 {
