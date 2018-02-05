@@ -1,7 +1,7 @@
-# Gammaray
+# Gamma Ray
 [![Go Report Card](https://goreportcard.com/badge/github.com/dgonzalez/gammaray)](https://goreportcard.com/report/github.com/dgonzalez/gammaray)
 
-Gammray is a software that helps developers to look for vulnerabilities on their Node.js
+Gamm Ray is a software that helps developers to look for vulnerabilities on their Node.js
 applications. Its pluggable infrastructure makes very easy to write an integration with
 several vulnerabilities databases.
 
@@ -12,12 +12,11 @@ In order to get it just run:
 ```
 go get github.com/dgonzalez/gammaray
 ```
-Once it is finished, you should have gammaray binary in your `GOPATH/bin` folder.
+Once it is finished, you should have the `gammaray` binary in your `GOPATH/bin` folder.
 
 ## Build it
 
-We use `dep` to build gammaray. In order to build it, first fetch the dependencies
-and then build it:
+We use `dep` to manage the dependencies for `gammaray`. In order to build it, run:
 
 ```
 dep ensure
