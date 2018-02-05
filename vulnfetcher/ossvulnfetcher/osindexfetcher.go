@@ -42,8 +42,9 @@ func New(URL string) *OSSIndexFetcher {
 }
 
 // Fetch does nothing as it is API based. No need to download anything.
-func (n *OSSIndexFetcher) Fetch() {
+func (n *OSSIndexFetcher) Fetch() error {
 	// Nothing to do here. API based.
+	return nil
 }
 
 // Test tests for a package
@@ -81,7 +82,7 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 			Title:       vulnerability.Title,
 			Description: vulnerability.Description,
 			Versions:    strings.Join(vulnerability.Versions, " "),
-			References:  "[ " + strings.Join(vulnerability.References, " ") + " ]\n",
+			References:  strings.Join(vulnerability.References, " "),
 		}
 		vulnerabilities = append(vulnerabilities, processedVulnerability)
 	}
