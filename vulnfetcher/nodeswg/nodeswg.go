@@ -65,10 +65,10 @@ func (n *Fetcher) Fetch() error {
 
 		if strings.HasSuffix(path, ".json") {
 			jsonFile, err := os.Open(path)
-			defer jsonFile.Close()
 			if err != nil {
 				return err
 			}
+			defer jsonFile.Close()
 
 			jsonParser := json.NewDecoder(jsonFile)
 			var nodeVulnerability Vulnerability
