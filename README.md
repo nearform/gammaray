@@ -1,5 +1,6 @@
 # Gamma Ray
 [![Go Report Card](https://goreportcard.com/badge/github.com/dgonzalez/gammaray)](https://goreportcard.com/report/github.com/dgonzalez/gammaray)
+![Travis](https://travis-ci.org/dgonzalez/gammaray.svg?branch=master)
 
 Gamm Ray is a software that helps developers to look for vulnerabilities on their Node.js
 applications. Its pluggable infrastructure makes very easy to write an integration with
