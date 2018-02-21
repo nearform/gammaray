@@ -1,0 +1,15 @@
+language: go
+go:
+  - 1.9
+  - 1.10
+
+before_script:
+  - make install
+
+notifications:
+  email: false
+
+script:
+  - test -z $(gofmt -s -l $GO_FILES)
+  - go test -v -race ./...
+  - go vet ./...
