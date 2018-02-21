@@ -20,6 +20,12 @@
   revision = "e06696f847aeda6f39a8f0b7cdff193b7690aef6"
 
 [[projects]]
+  name = "github.com/spacemeshos/go-spacemesh"
+  packages = ["assert"]
+  revision = "f4a642e43d5bee3f8acf4f413d8c49e0fadd1d2e"
+  version = "v0.3"
+
+[[projects]]
   name = "github.com/ulikunitz/xz"
   packages = [".","internal/hash","internal/xlog","lzma"]
   revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
@@ -28,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "df38706cbd6fe3aeb5e344b531c53c4f11781e9f025feb1256b7f3989596bb07"
+  inputs-digest = "287462403d228b629bfd5184971943def3ee7b2c4489b143f99f60a99149913d"
   solver-name = "gps-cdcl"
   solver-version = 1
