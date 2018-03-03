@@ -1,13 +1,22 @@
 package ossvulnfetcher
 
 import (
-	"github.com/dgonzalez/gammaray/vulnfetcher"
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 // OSSPackageRequest request for a package
 type OSSPackageRequest struct {
-	Pm   string `json:"pm"`
-	Name string `json:"name"`
+	Pm      string `json:"pm"`
+	Name    string `json:"name"`
+	Version string `json:"-"`
+}
+type OSSPackageMultipleRequest struct {
+	ossPackages []OSSPackageRequest
 }
 
 // OSSPackageResponse response for a package request
@@ -27,7 +36,7 @@ type OSSVulnerability struct {
 // OSSIndexFetcher fetches the node.js security vulnerabilities
 type OSSIndexFetcher struct {
 	URL      string
-	packages []vulnfetcher.Package
+	packages []OSSPackageRequest
 }
 
 // New creates a new instance of OSSIndexFetcher
@@ -41,13 +50,26 @@ func (n *OSSIndexFetcher) Fetch() error {
 	return nil
 }
 
-// Adds a package to the list of packages of the app
+// Add adds a package to the list of packages of the app
 func (n *OSSIndexFetcher) Add(name string, version string) {
-	n.packages = append(n.packages, vulnfetcher.Package{Name: name, Version: version})
+	n.packages = append(n.packages, OSSPackageRequest{Pm: "npm", Name: name, Version: version})
 }
 
 // Test tests for a package
 func (n *OSSIndexFetcher) Test(name string, version string) {
+	request := &OSSPackageMultipleRequest{n.packages}
+	data, err := json.Marshal(request)
+	if err != nil {
+		panic(err)
+	}
+	response, err := http.Post(n.URL, "application/json", bytes.NewReader(data))
+	if response.StatusCode > 299 || response.StatusCode < 200 {
+		panic("Unsuccessful status code: " + string(response.StatusCode))
+	}
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
 	// request := &OSSPackageRequest{Pm: "npm", Name: name}
 	// data, err := json.Marshal([]*OSSPackageRequest{request})
 	// if err != nil {
@@ -67,12 +89,12 @@ func (n *OSSIndexFetcher) Test(name string, version string) {
 	// 	return nil, err
 	// }
 	//
-	// var structuredResponse []OSSPackageResponse
-	// unmarshalError := json.Unmarshal(responseData, &structuredResponse)
-	// if unmarshalError != nil {
-	// 	return nil, unmarshalError
-	// }
-	//
+	var structuredResponse []OSSPackageResponse
+	unmarshalError := json.Unmarshal(responseData, &structuredResponse)
+	if unmarshalError != nil {
+		panic(unmarshalError)
+	}
+	spew.Dump(structuredResponse)
 	// packageResponse := structuredResponse[0]
 	// var vulnerabilities []vulnfetcher.Vulnerability
 	// for _, vulnerability := range packageResponse.Vulnerabilities {

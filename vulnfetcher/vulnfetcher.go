@@ -9,12 +9,6 @@ type Vulnerability struct {
 	References  string
 }
 
-// Package is a package. Not a map to allow multiple versions.
-type Package struct {
-	Name    string
-	Version string
-}
-
 // VulnFetcher fetches vulnerabilities
 type VulnFetcher interface {
 	Fetch() error

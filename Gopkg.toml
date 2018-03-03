@@ -32,3 +32,7 @@
 [[constraint]]
   name = "github.com/mholt/archiver"
   version = "2.0.0"
+
+[[constraint]]
+  name = "github.com/davecgh/go-spew"
+  version = "1.1.0"
