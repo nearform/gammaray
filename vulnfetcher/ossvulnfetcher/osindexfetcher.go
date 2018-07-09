@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"gammaray/vulnfetcher"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/nearform/gammaray/vulnfetcher"
 )
 
 // OSSPackageRequest request for a package

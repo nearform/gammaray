@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"gammaray/pathrunner"
-	"gammaray/vulnfetcher/nodeswg"
-	"gammaray/vulnfetcher/ossvulnfetcher"
 	"os"
+
+	"github.com/nearform/gammaray/pathrunner"
+	"github.com/nearform/gammaray/vulnfetcher/nodeswg"
+	"github.com/nearform/gammaray/vulnfetcher/ossvulnfetcher"
 )
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.

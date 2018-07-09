@@ -2,10 +2,10 @@ package vulnfetcher
 
 import (
 	"fmt"
-	"gammaray/versionformatter"
 	"log"
 
 	"github.com/Masterminds/semver"
+	"github.com/nearform/gammaray/versionformatter"
 )
 
 // Vulnerability describes a vulnerability

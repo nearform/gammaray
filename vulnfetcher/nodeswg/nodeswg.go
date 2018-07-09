@@ -2,7 +2,6 @@ package nodeswg
 
 import (
 	"encoding/json"
-	"gammaray/vulnfetcher"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver"
+	"github.com/nearform/gammaray/vulnfetcher"
 )
 
 // Fetcher fetches node community vulnerabilities
