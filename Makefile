@@ -14,9 +14,15 @@ dev-install: install
 	go get -u github.com/mgechev/revive
 	go get -u github.com/mna/pigeon
 
+ci-install: dev-install
+	go get -u github.com/mattn/goveralls
+
 test:
 	go test -v -race ./...
 	go vet ./...
+
+ci-test: test
+	goveralls
 
 lint:
 	revive -formatter stylish pathrunner/... vulnfetcher/...
