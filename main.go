@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+	"gammaray/pathrunner"
+	"gammaray/vulnfetcher/nodeswg"
+	"gammaray/vulnfetcher/ossvulnfetcher"
 	"os"
-
-	"github.com/dgonzalez/gammaray/pathrunner"
-	"github.com/dgonzalez/gammaray/vulnfetcher/nodeswg"
-	"github.com/dgonzalez/gammaray/vulnfetcher/ossvulnfetcher"
 )
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
@@ -41,20 +40,21 @@ func main() {
 
 	for _, singlePackage := range packages {
 		vulnerabilitiesOSS, err := ossFetcher.Test(singlePackage.Name, singlePackage.Version)
-		//		vulnerabilitiesNodeSWG, err := nodeswgFetcher.Test()
+		// vulnerabilitiesNodeSWG, err := nodeswgFetcher.Test(singlePackage.Name, singlePackage.Version)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 
 		if len(vulnerabilitiesOSS) > 0 {
-			fmt.Printf("\tPackage: %s\n", singlePackage.Name)
+			fmt.Printf("\tPackage: %s (%s)\n", singlePackage.Name, singlePackage.Version)
 			for _, vulnerability := range vulnerabilitiesOSS {
 				fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
-				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tMore Info: [%s]\n",
+				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tFixed: %s\n\t\tMore Info: [%s]\n",
 					vulnerability.CVE,
 					vulnerability.Title,
 					vulnerability.Versions,
+					vulnerability.Fixed,
 					vulnerability.References,
 				)
 			}
@@ -65,10 +65,11 @@ func main() {
 			fmt.Printf("\tPackage: %s\n", singlePackage.Name)
 			for _, vulnerability := range vulnerabilitiesNodeSWG {
 				fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
-				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tMore Info: [%s]\n",
+				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tFixed: %s\n\t\tMore Info: [%s]\n",
 					vulnerability.CVE,
 					vulnerability.Title,
 					vulnerability.Versions,
+					vulnerability.Fixed,
 					vulnerability.References,
 				)
 			}

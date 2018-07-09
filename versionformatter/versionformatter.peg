@@ -1,0 +1,264 @@
+{
+// version expression formatter
+// will try to translate expressions in a semver version or version range
+// compatible one, like this :
+// 1.0.rc.1             --> 1.0.0-rc.1
+// <0.8                 --> <0.8.0
+// ^5 || <=5.0-beta     --> ^5.0.0 || <=5.0.0-beta
+package versionformatter
+
+import "log"
+
+func Format(expression string) (string, error) {
+  got, err := ParseReader("", strings.NewReader(expression))
+  if err != nil {
+    log.Fatal("👮 In '"+ expression + "':\n", err)
+    return "", err
+  }
+  return got.(string), err
+}
+
+func toIfaceSlice(v interface{}) []interface{} {
+  if v == nil {
+      return nil
+  }
+  return v.([]interface{})
+}
+}
+
+Input <- _ expr:(RangeList / Query) _ EOF {
+  log.Println("👮 Input", expr.(string))
+  return expr.(string), nil
+}
+
+RangeList <- head:Range tail:(RangeSubList)* {
+  if(tail == nil) {
+    return head, nil
+  }
+  tailSl := toIfaceSlice(tail)
+  res := head.(string)
+  for _, part := range tailSl {
+    res += part.(string)
+  }
+  return res, nil
+}
+
+RangeSubList <- separator:RangeListSeparator version:Version {
+  return separator.(string) + version.(string), nil
+}
+
+RangeListSeparator <- (CommaOrPipe _ / MandatoryWhiteSpace CommaOrPipe _ / MandatoryWhiteSpace) {
+  return string(", "), nil
+}
+
+Range <- PrimitiveRange / Version / TildeRange / CaretRange
+
+PrimitiveRange <- (startop:StartRangeOperator _ start:Version _ CommaOrPipe? _ endop:EndRangeOperator _ end:Version) {
+  return string(startop.([]uint8)) + start.(string) + ", " + string(endop.([]uint8)) + end.(string), nil
+}
+
+StartRangeOperator <- ">=" / ">"
+
+EndRangeOperator <- "<=" / "<"
+
+CommaOrPipe <- "," / "|" {
+  return string(", "), nil
+}
+
+HyphenRange <- (start:Version _ "-" _ end:Version) {
+ var res = start.(string) + " - " + end.(string)
+ log.Println("👮 HyphenRange", res)
+ return res, nil
+}
+
+XRange <- version:Version {
+ var res = version.(string)
+ log.Println("👮 XRange", res)
+ return res, nil
+}
+
+TildeRange <- ("~" version:Version) {
+ var res = "~" + version.(string)
+ log.Println("👮 TildeRange", res)
+ return res, nil
+}
+
+CaretRange <- ("^" version:Version) {
+ var res = "^" + version.(string)
+ log.Println("👮 CaretRange", res)
+ return res, nil
+}
+
+Query <- head:UnaryAndVersion tail:OptionalOperatorExpressions {
+  expr := head.(string) + tail.(string)
+  log.Println("👮 Expression", expr)
+  return expr, nil
+}
+
+OptionalOperatorExpressions <- ops:(OperatorExpression)* {
+  if(ops == nil) {
+    return "", nil
+  }
+  opsSl := toIfaceSlice(ops)
+  res := ""
+  for _, op := range opsSl {
+    res += op.(string)
+  }
+  if res != "" {
+    log.Println("👮 OptionalOperatorExpressions", res)
+  }
+  return res, nil
+}
+
+OperatorExpression <- op:SpacedOperator expr:Query {
+  return op.(string) + expr.(string), nil
+}
+
+SpacedOperator <- op:Operator {
+  if(op == " ") {
+    return " ", nil
+  }
+  if(op == ",") {
+    return op.(string) + " ", nil
+  }
+  return " " + op.(string) + " ", nil
+}
+
+Primitive  <- comparator:Comparator partial:Version {
+  return comparator.(string) + partial.(string), nil
+}
+
+UnaryAndVersion <- _ unary:OptionalUnary _ version:Version {
+  return unary.(string) + version.(string), nil
+}
+
+OptionalUnary <- op:UnaryOperator? {
+  if(op == nil) {
+    return "", nil
+  }
+  return op.(string), nil
+}
+
+Version <- head:Major tail:OptionalMinorPatchPreRelease {
+  log.Println("👮 major", head)
+  version := head.(string) + tail.(string)
+  log.Println("👮 whole version:", version)
+  return version, nil
+}
+
+Major <- VersionPart
+
+OptionalMinorPatchPreRelease <- head:OptionalDotMinor tail:OptionalPatchPreRelease {
+  return head.(string) + tail.(string), nil
+}
+
+OptionalDotMinor <- minor:DotVersionPart? {
+  if(minor == nil) {
+    return ".0", nil
+  }
+  log.Println("👮 minor", minor)
+  return minor.(string), nil
+}
+
+Minor <- VersionPart
+
+OptionalPatchPreRelease <- head:OptionalDotPatch tail:OptionalPreRelease {
+  if(head == nil) {
+    return ".0" + tail.(string), nil
+  }
+  log.Println("👮 patch", head)
+  return head.(string) + tail.(string), nil
+
+}
+
+OptionalDotPatch <- patch:DotVersionPart? {
+  if(patch == nil) {
+    return ".0", nil
+  }
+  return patch.(string), nil
+}
+
+DotVersionPart <- Dot n:VersionPart {
+  if(n == nil) {
+    return ".0", nil
+  }
+  return "." + n.(string), nil
+}
+
+Patch <- VersionPart
+
+OptionalPreRelease <- (Dash/Dot/Plus)? prerelease:PreRelease? {
+  if(prerelease == nil) {
+    return "", nil
+  }
+  log.Println("👮 prerelease", prerelease)
+  if(prerelease.(string) == "") {
+    return "", nil
+  }
+  return "-" + prerelease.(string), nil
+}
+
+PreRelease <- PreReleaseContent* {
+  return string(c.text), nil
+}
+
+PreReleaseContent <- VersionPart / Word / Dot / Dash / Plus
+
+Dot "." <- [.] {
+  return ".", nil
+}
+
+Dash "-" <- [-] {
+  return "-", nil
+}
+
+Plus "+" <- [+] {
+  return "=", nil
+}
+
+Word <- [a-zA-Z]+ {
+  return string(c.text), nil
+}
+
+VersionPart
+  = wildcard:("x" / "X" / "*") {
+    return string(wildcard.([]uint8)), nil
+  } / number:Number {
+    return number.(string), nil
+  }
+
+Number <- [0-9]+ {
+  var value = string(c.text)
+  i, err := strconv.ParseInt(value, 10, 64)
+  if err != nil {
+    log.Print("Could not translate '", value, "' in 64bit int, will use original value")
+    return value, nil
+  }
+
+  return strconv.FormatInt(i, 10), nil
+}
+
+Operator <- Or / MandatoryWhiteSpace
+
+Or <- op:( MandatoryWhiteSpace "||" / "||") {
+  return string("||"), nil
+}
+
+Comparator <- op:(">=" / "<=" / "<" / ">" / "=") {
+  return string(op.([]uint8)), nil
+}
+
+UnaryOperator "unary" <- op:("!=" / "==" /"<=" / ">=" / "<" / ">" / "=" / "!" / "^" / "~" / "")? {
+  if(op == nil) {
+    return "", nil
+  }
+  return string(op.([]uint8)), nil
+}
+
+MandatoryWhiteSpace "mandatory whitespace" <- [ \t\n\r]+ {
+  return string(" "), nil
+}
+
+_ "whitespace" <- [ \t\n\r]*
+
+EOF <- !.
