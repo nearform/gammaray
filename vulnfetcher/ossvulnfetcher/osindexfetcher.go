@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"gammaray/vulnfetcher"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -86,7 +86,7 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 			Fixed:       strings.Join(vulnerability.FixedVersions, " "),
 			References:  strings.Join(vulnerability.References, " "),
 		}
-		fmt.Println("✨ OSS Vulnerability check for ", name, "(", version, ") in ", processedVulnerability.Versions, "excluding", processedVulnerability.Fixed)
+		log.Println("✨ OSS Vulnerability check for ", name, "(", version, ") in ", processedVulnerability.Versions, "excluding", processedVulnerability.Fixed)
 		isImpacted, err := vulnfetcher.IsImpactedByVulnerability(name, version, &processedVulnerability)
 		if err != nil {
 			return nil, err

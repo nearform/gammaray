@@ -2,9 +2,9 @@ package nodeswg
 
 import (
 	"encoding/json"
-	"fmt"
 	"gammaray/vulnfetcher"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -103,7 +103,7 @@ func (n *Fetcher) Test(module string, version string) ([]vulnfetcher.Vulnerabili
 			Fixed:       vulnerability.FixedVersions,
 			References:  vulnerability.References,
 		}
-		fmt.Println("✨ Node SWG Vulnerability check for ", module, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+		log.Println("✨ Node SWG Vulnerability check for ", module, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
 		isImpacted, err := vulnfetcher.IsImpactedByVulnerability(module, version, &vuln)
 		if err != nil {
 			return nil, err

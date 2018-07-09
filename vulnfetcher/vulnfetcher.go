@@ -3,6 +3,7 @@ package vulnfetcher
 import (
 	"fmt"
 	"gammaray/versionformatter"
+	"log"
 
 	"github.com/Masterminds/semver"
 )
@@ -23,10 +24,6 @@ type VulnFetcher interface {
 	Test(component string, version string) ([]Vulnerability, error)
 }
 
-// var invalidPreRelease = regexp.MustCompile("\\.([a-zA-Z].+?)(\\s|$)")
-// var majorMinorPatchPreReleaseBuild = regexp.MustCompile("\\d+\\.\\d+\\.\\d+\\-\\w+\\+[^ <>=~]")
-// var majorMinorNoPatch = regexp.MustCompile("\\.([a-zA-Z].+?)(\\s|$)")
-
 func tryToMakeValidVersion(version string) (string, error) {
 	// return invalidPreRelease.ReplaceAllString(version, "-$1")
 	return versionformatter.Format(version)
@@ -39,7 +36,7 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 		fmt.Printf("Error parsing module version '%s'(%s): %q", module, moduleVersion, err)
 		return true, err
 	}
-	fmt.Println("🐭 version", moduleVersion, "👉", version)
+	log.Println("version", moduleVersion, "👉", version)
 	ver, err := semver.NewVersion(version)
 	if err != nil {
 		fmt.Printf("Error parsing Package version of module '%s'(%s): %q", module, moduleVersion, err)
@@ -47,7 +44,7 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 	}
 
 	vulnVersions, err := tryToMakeValidVersion(vulnerability.Versions)
-	fmt.Println("🐭 Vulnerable Versions", vulnerability.Versions, "👉", vulnVersions)
+	log.Println("Vulnerable Versions", vulnerability.Versions, "👉", vulnVersions)
 	if err != nil {
 		fmt.Printf("Error parsing Vulnerability version range of module '%s'(%s): %q", module, moduleVersion, err)
 		return true, err
@@ -60,16 +57,16 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isVuln = rangeVuln.Check(ver)
 	if !isVuln {
-		fmt.Println("🐭", module, "(", moduleVersion, ") is not subject to a known vulnerability ✅")
+		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability ✅")
 		return false, err
 	}
 
 	if vulnerability.Fixed == "" {
-		fmt.Println("🐭", module, "(", moduleVersion, ") is subject to a known vulnerability! ❌")
+		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability! ❌")
 		return true, nil
 	}
 	fixedVersions, err := tryToMakeValidVersion(vulnerability.Fixed)
-	fmt.Println("🐭 fixedVersions", vulnerability.Fixed, "👉", fixedVersions)
+	log.Println("fixedVersions", vulnerability.Fixed, "👉", fixedVersions)
 	if err != nil {
 		fmt.Printf("Error parsing Fixed version range of module '%s'(%s): %q", module, moduleVersion, err)
 		return false, err
@@ -82,9 +79,9 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isFixed = rangeFixed.Check(ver)
 	if isFixed {
-		fmt.Println("🐭", module, "(", moduleVersion, ") is not subject to a known vulnerability ✅ (part of the fixed versions)")
+		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability ✅ (part of the fixed versions)")
 	} else {
-		fmt.Println("🐭", module, "(", moduleVersion, ") is subject to a known vulnerability! ❌ (not part of the fixed versions)")
+		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability! ❌ (not part of the fixed versions)")
 	}
 
 	return !isFixed, nil
