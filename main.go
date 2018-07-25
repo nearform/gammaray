@@ -41,7 +41,6 @@ func main() {
 
 	for _, singlePackage := range packages {
 		vulnerabilitiesOSS, err := ossFetcher.Test(singlePackage.Name, singlePackage.Version)
-		// vulnerabilitiesNodeSWG, err := nodeswgFetcher.Test(singlePackage.Name, singlePackage.Version)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
