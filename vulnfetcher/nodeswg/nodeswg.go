@@ -3,14 +3,15 @@ package nodeswg
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/dgonzalez/gammaray/vulnfetcher"
 	"github.com/mholt/archiver"
+	"github.com/nearform/gammaray/vulnfetcher"
 )
 
 // Fetcher fetches node community vulnerabilities
@@ -24,6 +25,7 @@ type Vulnerability struct {
 	Module             string   `json:"module_name"`
 	CVES               []string `json:"cves"`
 	VulnerableVersions string   `json:"vulnerable_versions"`
+	FixedVersions      string   `json:"patched_versions"`
 	Title              string   `json:"title"`
 	References         string   `json:"references"`
 	Overview           string   `json:"overview"`
@@ -90,15 +92,26 @@ func (n *Fetcher) Test(module string, version string) ([]vulnfetcher.Vulnerabili
 	var vulnerabilities []vulnfetcher.Vulnerability
 
 	for _, vulnerability := range n.vulnerabilities {
-		if module == vulnerability.Module {
-			vulnerabilities = append(vulnerabilities, vulnfetcher.Vulnerability{
-				CVE:         strings.Join(vulnerability.CVES, " "),
-				Title:       vulnerability.Title,
-				Description: vulnerability.Overview,
-				Versions:    vulnerability.VulnerableVersions,
-				References:  vulnerability.References,
-			})
+		if module != vulnerability.Module {
+			continue
 		}
+		var vuln = vulnfetcher.Vulnerability{
+			CVE:         strings.Join(vulnerability.CVES, " "),
+			Title:       vulnerability.Title,
+			Description: vulnerability.Overview,
+			Versions:    vulnerability.VulnerableVersions,
+			Fixed:       vulnerability.FixedVersions,
+			References:  vulnerability.References,
+		}
+		log.Println("✨ Node SWG Vulnerability check for ", module, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+		isImpacted, err := vulnfetcher.IsImpactedByVulnerability(module, version, &vuln)
+		if err != nil {
+			return nil, err
+		}
+		if !isImpacted {
+			continue
+		}
+		vulnerabilities = append(vulnerabilities, vuln)
 	}
 
 	return vulnerabilities, nil

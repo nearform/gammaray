@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
-	"github.com/dgonzalez/gammaray/vulnfetcher"
+	"github.com/nearform/gammaray/vulnfetcher"
 )
 
 // OSSPackageRequest request for a package
@@ -24,11 +25,12 @@ type OSSPackageResponse struct {
 
 // OSSVulnerability vulnerability for a package response
 type OSSVulnerability struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	CVE         string   `json:"cve"`
-	Versions    []string `json:"versions"`
-	References  []string `json:"references"`
+	Title         string   `json:"title"`
+	Description   string   `json:"description"`
+	CVE           string   `json:"cve"`
+	Versions      []string `json:"versions"`
+	FixedVersions []string `json:"fixed"`
+	References    []string `json:"references"`
 }
 
 // OSSIndexFetcher fetches the node.js security vulnerabilities
@@ -82,7 +84,16 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 			Title:       vulnerability.Title,
 			Description: vulnerability.Description,
 			Versions:    strings.Join(vulnerability.Versions, " "),
+			Fixed:       strings.Join(vulnerability.FixedVersions, " "),
 			References:  strings.Join(vulnerability.References, " "),
+		}
+		log.Println("✨ OSS Vulnerability check for ", name, "(", version, ") in ", processedVulnerability.Versions, "excluding", processedVulnerability.Fixed)
+		isImpacted, err := vulnfetcher.IsImpactedByVulnerability(name, version, &processedVulnerability)
+		if err != nil {
+			return nil, err
+		}
+		if !isImpacted {
+			continue
 		}
 		vulnerabilities = append(vulnerabilities, processedVulnerability)
 	}

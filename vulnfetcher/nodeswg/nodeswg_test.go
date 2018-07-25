@@ -48,6 +48,21 @@ func TestTestExistingPackage(t *testing.T) {
 	assert.True(t, strings.HasPrefix(vulnerabilities[0].References, "- https://www.npmjs.org/package/bassmaster"))
 }
 
+func TestTestExistingPackageWithFixedVersion(t *testing.T) {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./test_data/test-data.zip")
+		}),
+	)
+	nodeFetcher := New(server.URL)
+	err := nodeFetcher.Fetch()
+	assert.NoErr(t, err)
+
+	vulnerabilities, err := nodeFetcher.Test("bassmaster", "1.6.0")
+	assert.NoErr(t, err)
+	assert.Equal(t, 0, len(vulnerabilities), "number of vulns")
+}
+
 func TestTestUnexistingPackage(t *testing.T) {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

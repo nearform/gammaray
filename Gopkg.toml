@@ -32,3 +32,11 @@
 [[constraint]]
   name = "github.com/mholt/archiver"
   version = "2.0.0"
+
+[[constraint]]
+  name = "github.com/Masterminds/semver"
+  version = "1.4.2"
+
+[[constraint]]
+  name = "github.com/google/go-cmp"
+  version = "0.2.0"

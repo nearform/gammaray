@@ -2,18 +2,19 @@ language: go
 go:
   - 1.9
 
+go_import_path: github.com/nearform/gammaray
+
 before_install:
-  - curl -L -s https://github.com/golang/dep/releases/download/v0.3.1/dep-linux-amd64 -o $GOPATH/bin/dep
-  - chmod +x $GOPATH/bin/dep
-  - go get github.com/mattn/goveralls
+  - export PATH="$PATH:$GOPATH/bin"
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
 install:
-  - make install
+  - make ci-install
+  - make build
 
 notifications:
   email: false
 
 script:
-  - go test -v -race ./...
-  - go vet ./...
+  - make test
   - $GOPATH/bin/goveralls -service=travis-ci
