@@ -1,7 +1,12 @@
-all: install build
+all: clean install build
 
 formatter:
 	pigeon -o versionformatter/versionformatter.go versionformatter/versionformatter.peg
+
+.PHONY: clean
+clean:
+	@rm -rf vendor || true
+	@rm gammaray || true
 
 build: formatter
 	go build -v -race
