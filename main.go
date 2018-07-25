@@ -10,7 +10,7 @@ import (
 )
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
-const OSSIndexURL = "https://ossindex.net/v2.0/package"
+const OSSIndexURL = "https://ossindex.net/api/v3/component-report"
 const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
 
 func main() {
@@ -40,6 +40,9 @@ func main() {
 	}
 
 	for _, singlePackage := range packages {
+		if singlePackage.Name == "" {
+			continue
+		}
 		vulnerabilitiesOSS, err := ossFetcher.Test(singlePackage.Name, singlePackage.Version)
 		if err != nil {
 			fmt.Println(err.Error())
