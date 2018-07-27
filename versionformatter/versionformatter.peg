@@ -26,12 +26,12 @@ func toIfaceSlice(v interface{}) []interface{} {
 }
 }
 
-Input <- _ expr:(RangeList / Query) _ EOF {
+Input <- _ expr:(ExpressionList / Expression) _ EOF {
   log.Println("👮 Input", expr.(string))
   return expr.(string), nil
 }
 
-RangeList <- head:Range tail:(RangeSubList)* {
+ExpressionList <- head:Expression tail:(ExpressionSubList)+ {
   if(tail == nil) {
     return head, nil
   }
@@ -40,32 +40,74 @@ RangeList <- head:Range tail:(RangeSubList)* {
   for _, part := range tailSl {
     res += part.(string)
   }
+  log.Println("👮 ExpressionList", res)
   return res, nil
 }
 
-RangeSubList <- separator:RangeListSeparator version:Version {
-  return separator.(string) + version.(string), nil
+ExpressionSubList <- separator:ExpressionSeparator expr:Expression {
+  res := separator.(string) + expr.(string)
+  log.Println("👮 ExpressionSubList", res)
+  return res, nil
 }
 
-RangeListSeparator <- (CommaOrPipe _ / MandatoryWhiteSpace CommaOrPipe _ / MandatoryWhiteSpace) {
-  return string(", "), nil
+Expression <- expr:(Range / SimpleExpression) {
+  res := expr.(string)
+  log.Println("👮 Expression", res)
+  return res, nil
 }
 
-Range <- PrimitiveRange / Version / TildeRange / CaretRange
+ExpressionSeparator <- (MandatoryWhiteSpace "||" MandatoryWhiteSpace /
+                       MandatoryWhiteSpace "," MandatoryWhiteSpace /
+                       MandatoryWhiteSpace "|" MandatoryWhiteSpace /
+                       MandatoryWhiteSpace "||" /
+                       MandatoryWhiteSpace "," /
+                       MandatoryWhiteSpace "|" /
+                       "||" MandatoryWhiteSpace /
+                       "," MandatoryWhiteSpace /
+                       "|" MandatoryWhiteSpace /
+                       "||" /
+                       "," /
+                       "|" /
+                       MandatoryWhiteSpace) {
+  log.Println("👮 ExpressionSeparator", string(c.text), "👉 ||")
+  return " || ", nil
+}
 
-PrimitiveRange <- (startop:StartRangeOperator _ start:Version _ CommaOrPipe? _ endop:EndRangeOperator _ end:Version) {
-  return string(startop.([]uint8)) + start.(string) + ", " + string(endop.([]uint8)) + end.(string), nil
+Range <- PrimitiveRange / HyphenRange / TildeRange / CaretRange / XRange
+
+PrimitiveRange <- (startop:StartRangeOperator start:Version s:InRangeSeparator endop:EndRangeOperator end:Version) {
+  res := string(startop.([]uint8)) + start.(string) + ", " + string(endop.([]uint8)) + end.(string)
+  log.Println("👮 PrimitiveRange", res)
+  return res, nil
+} / (startop:EndRangeOperator start:Version s:InRangeSeparator endop:StartRangeOperator end:Version) {
+  res := string(endop.([]uint8)) + end.(string) + ", " + string(startop.([]uint8)) + start.(string)
+  log.Println("👮 Reversed PrimitiveRange", res)
+  return res, nil
 }
 
 StartRangeOperator <- ">=" / ">"
 
 EndRangeOperator <- "<=" / "<"
 
-CommaOrPipe <- "," / "|" {
+InRangeSeparator <- MandatoryWhiteSpace "," MandatoryWhiteSpace /
+                    MandatoryWhiteSpace "|" MandatoryWhiteSpace /
+                    MandatoryWhiteSpace "," /
+                    MandatoryWhiteSpace "|" /
+                    "," MandatoryWhiteSpace /
+                    "|" MandatoryWhiteSpace /
+                    "," /
+                    "|" /
+                    MandatoryWhiteSpace {
+  log.Println("👮 InRangeSeparator", string(c.text), "👉 \" \"")
   return string(", "), nil
 }
 
-HyphenRange <- (start:Version _ "-" _ end:Version) {
+HyphenOperator <- MandatoryWhiteSpace "-" MandatoryWhiteSpace /
+                  MandatoryWhiteSpace "-" /
+                  "-" MandatoryWhiteSpace /
+                  "-"
+
+HyphenRange <- (start:Version HyphenOperator end:Version) {
  var res = start.(string) + " - " + end.(string)
  log.Println("👮 HyphenRange", res)
  return res, nil
@@ -89,46 +131,12 @@ CaretRange <- ("^" version:Version) {
  return res, nil
 }
 
-Query <- head:UnaryAndVersion tail:OptionalOperatorExpressions {
-  expr := head.(string) + tail.(string)
-  log.Println("👮 Expression", expr)
-  return expr, nil
+SimpleExpression <- expr:UnaryAndVersion {
+  log.Println("👮 SimpleExpression", expr.(string))
+  return expr.(string), nil
 }
 
-OptionalOperatorExpressions <- ops:(OperatorExpression)* {
-  if(ops == nil) {
-    return "", nil
-  }
-  opsSl := toIfaceSlice(ops)
-  res := ""
-  for _, op := range opsSl {
-    res += op.(string)
-  }
-  if res != "" {
-    log.Println("👮 OptionalOperatorExpressions", res)
-  }
-  return res, nil
-}
-
-OperatorExpression <- op:SpacedOperator expr:Query {
-  return op.(string) + expr.(string), nil
-}
-
-SpacedOperator <- op:Operator {
-  if(op == " ") {
-    return " ", nil
-  }
-  if(op == ",") {
-    return op.(string) + " ", nil
-  }
-  return " " + op.(string) + " ", nil
-}
-
-Primitive  <- comparator:Comparator partial:Version {
-  return comparator.(string) + partial.(string), nil
-}
-
-UnaryAndVersion <- _ unary:OptionalUnary _ version:Version {
+UnaryAndVersion <- unary:OptionalUnary _ version:Version {
   return unary.(string) + version.(string), nil
 }
 
@@ -213,21 +221,20 @@ Dash "-" <- [-] {
 }
 
 Plus "+" <- [+] {
-  return "=", nil
+  return "+", nil
 }
 
 Word <- [a-zA-Z]+ {
   return string(c.text), nil
 }
 
-VersionPart
-  = wildcard:("x" / "X" / "*") {
-    return string(wildcard.([]uint8)), nil
-  } / number:Number {
-    return number.(string), nil
-  }
+VersionPart <- Wildcard / Number
 
-Number <- [0-9]+ {
+Wildcard <- wildcard:("x" / "X" / "*") {
+  return string(wildcard.([]uint8)), nil
+}
+
+Number "number" <- [0-9]+ {
   var value = string(c.text)
   i, err := strconv.ParseInt(value, 10, 64)
   if err != nil {
@@ -238,17 +245,12 @@ Number <- [0-9]+ {
   return strconv.FormatInt(i, 10), nil
 }
 
-Operator <- Or / MandatoryWhiteSpace
-
-Or <- op:( MandatoryWhiteSpace "||" / "||") {
-  return string("||"), nil
+Comparator <- ">=" / "<=" / "<" / ">" / "=" {
+  log.Println("👮 Comparator", c.text)
+  return string(c.text), nil
 }
 
-Comparator <- op:(">=" / "<=" / "<" / ">" / "=") {
-  return string(op.([]uint8)), nil
-}
-
-UnaryOperator "unary" <- op:("!=" / "==" /"<=" / ">=" / "<" / ">" / "=" / "!" / "^" / "~" / "")? {
+UnaryOperator "unary" <- op:("!=" / "==" /"<=" / ">=" / "<" / ">" / "=" / "!" )? {
   if(op == nil) {
     return "", nil
   }
