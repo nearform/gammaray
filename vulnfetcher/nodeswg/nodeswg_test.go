@@ -46,7 +46,7 @@ func TestTestExistingPackage(t *testing.T) {
 	assert.Equal(t, "Arbitrary JavaScript Execution", vulnerabilities[0].Title, "Title")
 	assert.True(t, strings.HasPrefix(vulnerabilities[0].Description, "A vulnerability exists in bassmaster"), "Description")
 	assert.Equal(t, "<=1.5.1", vulnerabilities[0].Versions, "Version")
-	assert.True(t, strings.HasPrefix(vulnerabilities[0].References, "- https://www.npmjs.org/package/bassmaster"))
+	assert.True(t, strings.HasPrefix(vulnerabilities[0].References, "https://www.npmjs.org/package/bassmaster"))
 }
 
 func TestTestExistingPackageWithFixedVersion(t *testing.T) {

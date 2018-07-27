@@ -1,6 +1,7 @@
 package nodeswg
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"log"
@@ -39,8 +40,12 @@ func New(URL string) *Fetcher {
 
 // Fetch builds the database from nodeswg on github
 func (n *Fetcher) Fetch() error {
-	destFilePath := path.Join(os.TempDir(), "nodeswg.zip")
-	unzipFolder := path.Join(os.TempDir(), "nodeswg")
+	tmpDir := path.Join(os.TempDir(), base64.StdEncoding.EncodeToString([]byte(n.DatabaseURL)))
+	os.Mkdir(tmpDir, os.ModePerm)
+
+	log.Print("Temporary directory for NodeSWG Database <", n.DatabaseURL, ">:\n", tmpDir)
+	destFilePath := path.Join(tmpDir, "nodeswg.zip")
+	unzipFolder := path.Join(tmpDir, "nodeswg")
 	vulnFolder := path.Join(unzipFolder, "security-wg-master", "vuln", "npm")
 
 	os.Mkdir(unzipFolder, os.ModePerm)
