@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/nearform/gammaray/pathrunner"
@@ -19,10 +20,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	packages, err := pathrunner.Walk(os.Args[1])
+	f, err := os.OpenFile(".gammaray.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Error opening file: %v", err)
+	}
+	defer f.Close()
+
+	log.SetOutput(f)
+
+	packageList, err := pathrunner.Walk(os.Args[1])
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
+	}
+
+	// keep only valid packages
+	var packages []pathrunner.NodePackage
+	for _, pkg := range packageList {
+		if pkg.Name == "" {
+			log.Print("Ignoring package with empty name")
+			continue
+		}
+		if pkg.Version == "" {
+			pkg.Version = "*"
+		}
+		packages = append(packages, pkg)
 	}
 
 	ossFetcher := ossvulnfetcher.New(OSSIndexURL)
