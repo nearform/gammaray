@@ -10,12 +10,14 @@ import (
 
 // Vulnerability describes a vulnerability
 type Vulnerability struct {
-	CVE         string
-	Title       string
-	Description string
-	Versions    string
-	Fixed       string
-	References  string
+	Package        string
+	PackageVersion string
+	CVE            string
+	Title          string
+	Description    string
+	Versions       string
+	Fixed          string
+	References     string
 }
 
 // VulnFetcher fetches vulnerabilities

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/nearform/gammaray/pathrunner"
 	"github.com/spacemeshos/go-spacemesh/assert"
 )
 
@@ -30,7 +31,10 @@ func TestTestExistingPackageWithoutCVE(t *testing.T) {
 	err := fetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := fetcher.Test("request", "1.0.0")
+	var packages []pathrunner.NodePackage
+	packages = append(packages, pathrunner.NodePackage{Name: "request", Version: "1.0.0"})
+	log.Print("packages:", packages)
+	vulnerabilities, err := fetcher.TestAll(packages)
 	assert.NoErr(t, err)
 
 	log.Print(vulnerabilities)
@@ -48,7 +52,8 @@ func TestTestExistingPackageWithCVE(t *testing.T) {
 	err := fetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := fetcher.Test("bassmaster", "1.0.0")
+	var packages []pathrunner.NodePackage
+	vulnerabilities, err := fetcher.TestAll(append(packages, pathrunner.NodePackage{Name: "bassmaster", Version: "1.0.0"}))
 	assert.NoErr(t, err)
 
 	log.Print(vulnerabilities)
@@ -72,7 +77,8 @@ func TestTestExistingPackageHavingNamespaceAndNoKnownVulns(t *testing.T) {
 	err := fetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := fetcher.Test("@babel/code-frame", "7.0.0-beta.47")
+	var packages []pathrunner.NodePackage
+	vulnerabilities, err := fetcher.TestAll(append(packages, pathrunner.NodePackage{Name: "@babel/code-frame", Version: "7.0.0-beta.47"}))
 	assert.NoErr(t, err)
 
 	log.Print(vulnerabilities)

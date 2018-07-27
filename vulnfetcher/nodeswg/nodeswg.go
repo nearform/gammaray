@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/mholt/archiver"
+	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
@@ -27,7 +28,7 @@ type Vulnerability struct {
 	VulnerableVersions string   `json:"vulnerable_versions"`
 	FixedVersions      string   `json:"patched_versions"`
 	Title              string   `json:"title"`
-	References         string   `json:"references"`
+	References         []string `json:"references"`
 	Overview           string   `json:"overview"`
 }
 
@@ -63,7 +64,7 @@ func (n *Fetcher) Fetch() error {
 
 	archiver.Zip.Open(destFilePath, unzipFolder)
 
-	filepath.Walk(vulnFolder, func(path string, f os.FileInfo, err error) error {
+	err = filepath.Walk(vulnFolder, func(path string, f os.FileInfo, err error) error {
 
 		if strings.HasSuffix(path, ".json") {
 			jsonFile, err := os.Open(path)
@@ -83,36 +84,52 @@ func (n *Fetcher) Fetch() error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// Test tests for a vulnerability
-func (n *Fetcher) Test(module string, version string) ([]vulnfetcher.Vulnerability, error) {
+// Test tests for a vulnerability on a single package
+func (n *Fetcher) Test(pkg pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+	return n.TestAll(append(make([]pathrunner.NodePackage, 0, 1), pkg))
+}
+
+// TestAll tests for a vulnerability
+func (n *Fetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	var vulnerabilities []vulnfetcher.Vulnerability
 
-	for _, vulnerability := range n.vulnerabilities {
-		if module != vulnerability.Module {
-			continue
-		}
-		var vuln = vulnfetcher.Vulnerability{
-			CVE:         strings.Join(vulnerability.CVES, " "),
-			Title:       vulnerability.Title,
-			Description: vulnerability.Overview,
-			Versions:    vulnerability.VulnerableVersions,
-			Fixed:       vulnerability.FixedVersions,
-			References:  vulnerability.References,
-		}
-		log.Println("✨ Node SWG Vulnerability check for ", module, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
-		isImpacted, err := vulnfetcher.IsImpactedByVulnerability(module, version, &vuln)
-		if err != nil {
-			return nil, err
-		}
-		if !isImpacted {
-			continue
-		}
-		vulnerabilities = append(vulnerabilities, vuln)
-	}
+	for _, pkg := range pkgs {
+		name := pkg.Name
+		version := pkg.Version
 
+		for _, vulnerability := range n.vulnerabilities {
+			if name != vulnerability.Module {
+				continue
+			}
+			var vuln = vulnfetcher.Vulnerability{
+				Package:        name,
+				PackageVersion: version,
+				CVE:            strings.Join(vulnerability.CVES, " "),
+				Title:          vulnerability.Title,
+				Description:    vulnerability.Overview,
+				Versions:       vulnerability.VulnerableVersions,
+				Fixed:          vulnerability.FixedVersions,
+				References:     strings.Join(vulnerability.References, "\n\n"),
+			}
+			log.Println("✨ Node SWG Vulnerability check for ", name, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+			isImpacted, err := vulnfetcher.IsImpactedByVulnerability(name, version, &vuln)
+			if err != nil {
+				return nil, err
+			}
+			if !isImpacted {
+				continue
+			}
+			log.Println("✨ Node SWG Vulnerability found for ", name, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+			vulnerabilities = append(vulnerabilities, vuln)
+		}
+
+	}
 	return vulnerabilities, nil
 }

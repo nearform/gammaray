@@ -61,44 +61,58 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, singlePackage := range packages {
-		if singlePackage.Name == "" {
-			continue
-		}
-		vulnerabilitiesOSS, err := ossFetcher.Test(singlePackage.Name, singlePackage.Version)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+	vulnerabilitiesOSS, err := ossFetcher.TestAll(packages)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
 
-		if len(vulnerabilitiesOSS) > 0 {
-			fmt.Printf("\tPackage: %s (%s)\n", singlePackage.Name, singlePackage.Version)
-			for _, vulnerability := range vulnerabilitiesOSS {
-				fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
-				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tFixed: %s\n\t\tMore Info: [%s]\n",
-					vulnerability.CVE,
-					vulnerability.Title,
-					vulnerability.Versions,
-					vulnerability.Fixed,
-					vulnerability.References,
-				)
+	if len(vulnerabilitiesOSS) > 0 {
+		fmt.Println("🚨 Some vulnerabilities found by OSS Index")
+		var pkg string
+		var pkgversion string
+		for _, vulnerability := range vulnerabilitiesOSS {
+			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
+				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
 			}
-		}
+			pkg = vulnerability.Package
+			pkgversion = vulnerability.PackageVersion
 
-		vulnerabilitiesNodeSWG, err := nodeswgFetcher.Test(singlePackage.Name, singlePackage.Version)
-		if len(vulnerabilitiesNodeSWG) > 0 {
-			fmt.Printf("\tPackage: %s\n", singlePackage.Name)
-			for _, vulnerability := range vulnerabilitiesNodeSWG {
-				fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
-				fmt.Printf("\t\t\t- CVE: %s\n\t\tTitle: %s\n\t\tVersions: %s\n\t\tFixed: %s\n\t\tMore Info: [%s]\n",
-					vulnerability.CVE,
-					vulnerability.Title,
-					vulnerability.Versions,
-					vulnerability.Fixed,
-					vulnerability.References,
-				)
-			}
+			fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
+			fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
+				vulnerability.CVE,
+				vulnerability.Title,
+				vulnerability.Description,
+				vulnerability.References,
+			)
 		}
+	} else {
+		fmt.Println("✅ No Vulnerability found by OSS Index")
+	}
+
+	vulnerabilitiesNodeSWG, err := nodeswgFetcher.TestAll(packages)
+	if len(vulnerabilitiesNodeSWG) > 0 {
+		fmt.Println("🚨 Some vulnerabilities found by Node Security Working Group")
+		var pkg string
+		var pkgversion string
+		for _, vulnerability := range vulnerabilitiesNodeSWG {
+			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
+				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
+			}
+			pkg = vulnerability.Package
+			pkgversion = vulnerability.PackageVersion
+			fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
+			fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tVersions: %s\n\t\t\tFixed: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
+				vulnerability.CVE,
+				vulnerability.Title,
+				vulnerability.Versions,
+				vulnerability.Fixed,
+				vulnerability.Description,
+				vulnerability.References,
+			)
+		}
+	} else {
+		fmt.Println("✅ No Vulnerability found by Node Security Working Group")
 	}
 
 }

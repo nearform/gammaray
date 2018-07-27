@@ -3,7 +3,6 @@ package ossvulnfetcher
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
@@ -73,17 +73,50 @@ func ParseCVEFromTitle(title string) string {
 	return res[1]
 }
 
-// Test checks for a package vulnerabilities in OSSIndex
-func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulnerability, error) {
-	if len(name) == 0 {
-		return nil, errors.New("Error: Invalid empty name for package to check")
+// Test checks for a single package vulnerabilities in OSSIndex
+// func (n *OSSIndexFetcher) Test(pkg pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+// 	var array [1]pathrunner.NodePackage
+// 	array[0] = pkg
+// 	all, err := n.TestAll(array[:])
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if len(all) < 1 {
+// 		return []vulnfetcher.Vulnerability, nil
+// 	}
+// 	return all[0], nil
+// }
+
+// TestAll checks for a list of package vulnerabilities in OSSIndex
+func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+	if len(pkgs) <= 128 {
+		return n.testBatch(pkgs)
 	}
-	if len(version) == 0 {
-		return nil, errors.New("Error: Invalid empty version for package to check")
+	head := pkgs[0:127]
+	headVulns, err := n.testBatch(head)
+	if err != nil {
+		return headVulns, err
 	}
-	var coordinates [1]string
-	coordinates[0] = BuildCoordinate(name, version)
-	request := &OSSPackageRequest{Coordinates: coordinates[:]}
+	tail := pkgs[128:]
+	if len(tail) > 0 {
+		tailVulns, err := n.TestAll(tail)
+		allVulns := append(headVulns, tailVulns...)
+
+		return allVulns, err
+	}
+	return headVulns, nil
+}
+
+// max batch length for API v3 is 128 entries
+func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+	var coordinates []string
+	for _, pkg := range pkgs {
+		log.Print("build coordinates for:", pkg)
+		coordinates = append(coordinates, BuildCoordinate(pkg.Name, pkg.Version))
+	}
+	log.Print("batch coordinates list (", len(coordinates), " entries):", coordinates)
+
+	request := &OSSPackageRequest{Coordinates: coordinates}
 	data, err := json.Marshal(request)
 	if err != nil {
 		panic(err)
@@ -99,11 +132,13 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 	responseData, err := ioutil.ReadAll(response.Body)
 	switch {
 	case s >= 500:
-		log.Fatal(response)
+		log.Fatalf("Error 500:\n%s\nquery:\n%s", responseData, data)
 		return nil, fmt.Errorf("Error: OSSIndex is unavailable:\n%s\nclient request resulting in error: %s", responseData, data)
 	case s == 429:
+		log.Fatalf("Should retry:\n%s\nquery:\n%s", responseData, data)
 		return nil, fmt.Errorf("Error: OSSIndex : 'Too many requests':\n%s\nclient request resulting in error: %s", responseData, data)
 	case s >= 400:
+		log.Fatalf("Error 40X:\n%s\nquery:\n%s", responseData, data)
 		// Don't retry, it was client's fault
 		return nil, fmt.Errorf("Error: OSSIndex client error:\n%s\nclient request resulting in error: %s", responseData, data)
 	}
@@ -118,17 +153,22 @@ func (n *OSSIndexFetcher) Test(name string, version string) ([]vulnfetcher.Vulne
 		return nil, unmarshalError
 	}
 
-	packageResponse := structuredResponse[0]
 	var vulnerabilities []vulnfetcher.Vulnerability
-	for _, vulnerability := range packageResponse.Vulnerabilities {
-		processedVulnerability := vulnfetcher.Vulnerability{
-			CVE:         ParseCVEFromTitle(vulnerability.Title),
-			Title:       vulnerability.Title,
-			Description: vulnerability.Description,
-			Versions:    version,
+
+	for i, packageResponse := range structuredResponse {
+		for _, vulnerability := range packageResponse.Vulnerabilities {
+			processedVulnerability := vulnfetcher.Vulnerability{
+				Package:        pkgs[i].Name,
+				PackageVersion: pkgs[i].Version,
+				CVE:            ParseCVEFromTitle(vulnerability.Title),
+				Title:          vulnerability.Title,
+				Description:    vulnerability.Description,
+				Versions:       pkgs[i].Version,
+				References:     vulnerability.Reference,
+			}
+			log.Println("✨ OSS Vulnerability check for ", pkgs[i].Name, "(", pkgs[i].Version, ")")
+			vulnerabilities = append(vulnerabilities, processedVulnerability)
 		}
-		log.Println("✨ OSS Vulnerability check for ", name, "(", version, ")")
-		vulnerabilities = append(vulnerabilities, processedVulnerability)
 	}
 
 	return vulnerabilities, nil
