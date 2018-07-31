@@ -3,3 +3,4 @@ gammaray
 dist
 debug.test
 *.log
+*.orig
