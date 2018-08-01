@@ -13,6 +13,7 @@ type Vulnerability struct {
 	Package        string
 	PackageVersion string
 	CVE            string
+	CWE            string
 	Title          string
 	Description    string
 	Versions       string
@@ -59,12 +60,12 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isVuln = rangeVuln.Check(ver)
 	if !isVuln {
-		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability ✅")
+		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅")
 		return false, err
 	}
 
 	if vulnerability.Fixed == "" {
-		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability! ❌")
+		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌")
 		return true, nil
 	}
 	fixedVersions, err := tryToMakeValidVersion(vulnerability.Fixed)
@@ -81,9 +82,9 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isFixed = rangeFixed.Check(ver)
 	if isFixed {
-		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability ✅ (part of the fixed versions)")
+		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅ (part of the fixed versions)")
 	} else {
-		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability! ❌ (not part of the fixed versions)")
+		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌ (not part of the fixed versions)")
 	}
 
 	return !isFixed, nil
