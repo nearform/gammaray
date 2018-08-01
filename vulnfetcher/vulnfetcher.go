@@ -27,7 +27,7 @@ type VulnerabilityReport map[string][]Vulnerability
 // VulnFetcher fetches vulnerabilities
 type VulnFetcher interface {
 	Fetch() error
-	Test(component string, version string) ([]Vulnerability, error)
+	TestAll(component string, version string) ([]Vulnerability, error)
 }
 
 func tryToMakeValidVersion(version string) (string, error) {
