@@ -39,25 +39,25 @@ func tryToMakeValidVersion(version string) (string, error) {
 func IsImpactedByVulnerability(module string, moduleVersion string, vulnerability *Vulnerability) (bool, error) {
 	version, err := tryToMakeValidVersion(moduleVersion)
 	if err != nil {
-		fmt.Printf("Error parsing module version '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing module version '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
 	}
 	log.Println("version", moduleVersion, "👉", version)
 	ver, err := semver.NewVersion(version)
 	if err != nil {
-		fmt.Printf("Error parsing Package version of module '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing Package version of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
 	}
 
 	vulnVersions, err := tryToMakeValidVersion(vulnerability.Versions)
 	log.Println("Vulnerable Versions", vulnerability.Versions, "👉", vulnVersions)
 	if err != nil {
-		fmt.Printf("Error parsing Vulnerability version range of module '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing Vulnerability version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
 	}
 	rangeVuln, err := semver.NewConstraint(vulnVersions)
 	if err != nil {
-		fmt.Printf("Error parsing formatted Vulnerability version range of module '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing formatted Fixed Vulnerability version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
 	}
 
@@ -74,12 +74,12 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 	fixedVersions, err := tryToMakeValidVersion(vulnerability.Fixed)
 	log.Println("fixedVersions", vulnerability.Fixed, "👉", fixedVersions)
 	if err != nil {
-		fmt.Printf("Error parsing Fixed version range of module '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing Fixed version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return false, err
 	}
 	rangeFixed, err := semver.NewConstraint(fixedVersions)
 	if err != nil {
-		fmt.Printf("Error parsing formatted Fixed version range of module '%s'(%s): %q", module, moduleVersion, err)
+		fmt.Printf("Error parsing formatted Fixed version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return false, err
 	}
 
