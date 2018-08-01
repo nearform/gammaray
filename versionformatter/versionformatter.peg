@@ -12,7 +12,7 @@ import "log"
 func Format(expression string) (string, error) {
   got, err := ParseReader("", strings.NewReader(expression))
   if err != nil {
-    log.Fatal("👮 In '"+ expression + "':\n", err)
+    log.Println("👮 In '"+ expression + "':\n", err)
     return "", err
   }
   return got.(string), err
