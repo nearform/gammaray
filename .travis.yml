@@ -3,7 +3,11 @@ go:
   - 1.9
 
 go_import_path: github.com/nearform/gammaray
+sudo: required
 
+services:
+  - docker
+  
 before_install:
   - export PATH="$PATH:$GOPATH/bin"
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
