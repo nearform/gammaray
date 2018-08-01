@@ -2,7 +2,9 @@ package pathrunner
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +30,8 @@ func Walk(dir string) ([]NodePackage, error) {
 			var packageFile NodePackage
 			err = json.Unmarshal(data, &packageFile)
 			if err != nil {
-				panic("Error parsing data from " + path)
+				log.Println("Error parsing data from <", path, ">:\n", err)
+				fmt.Println("⚠️ Will ignore invalid 'package.json' <", path, "> file")
 			}
 			packagesList = append(packagesList, packageFile)
 		}
