@@ -26,14 +26,6 @@
   version = "1.13.1"
 
 [[constraint]]
-  branch = "v25"
-  name = "gopkg.in/libgit2/git2go.v25"
-
-[[constraint]]
-  name = "github.com/mholt/archiver"
-  version = "2.0.0"
-
-[[constraint]]
   name = "github.com/Masterminds/semver"
   version = "1.4.2"
 
@@ -42,5 +34,9 @@
   version = "0.2.0"
 
 [[constraint]]
-  name = "github.com/davecgh/go-spew"
-  version = "1.1.0"
+  name = "github.com/jaffee/commandeer"
+  version = "0.1.0"
+
+[[constraint]]
+  name = "github.com/gen2brain/go-unarr"
+  revision = "2adf16213a3c6333c47708458fe777f9e193e396"

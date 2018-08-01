@@ -14,12 +14,6 @@
   version = "v0.4.9"
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-
-[[projects]]
   name = "github.com/docker/distribution"
   packages = [
     "digest",
@@ -68,17 +62,9 @@
   version = "v0.3.3"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/dsnet/compress"
-  packages = [
-    ".",
-    "bzip2",
-    "bzip2/internal/sais",
-    "internal",
-    "internal/errors",
-    "internal/prefix"
-  ]
-  revision = "cc9eb1d7ad760af14e8f918698f745e80377af4f"
+  name = "github.com/gen2brain/go-unarr"
+  packages = ["."]
+  revision = "2adf16213a3c6333c47708458fe777f9e193e396"
 
 [[projects]]
   name = "github.com/google/go-cmp"
@@ -92,16 +78,10 @@
   version = "v0.2.0"
 
 [[projects]]
-  name = "github.com/mholt/archiver"
+  name = "github.com/jaffee/commandeer"
   packages = ["."]
-  revision = "cdc68dd1f170b8dfc1a0d2231b5bb0967ed67006"
-  version = "v2.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/nwaples/rardecode"
-  packages = ["."]
-  revision = "e06696f847aeda6f39a8f0b7cdff193b7690aef6"
+  revision = "d0012ff26169b05dca5c14910d9415ae389efb8e"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -116,17 +96,6 @@
   version = "v0.3"
 
 [[projects]]
-  name = "github.com/ulikunitz/xz"
-  packages = [
-    ".",
-    "internal/hash",
-    "internal/xlog",
-    "lzma"
-  ]
-  revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
-  version = "v0.5.4"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -135,7 +104,7 @@
     "internal/socks",
     "proxy"
   ]
-  revision = "c4299a1a0d8524c11563db160fbf9bddbceadb21"
+  revision = "49c15d80dfbc983ea25246ee959d970efe09ec09"
 
 [[projects]]
   branch = "master"
@@ -146,6 +115,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "348c407f8a832ba3f5a9755a7707dc8729ae6d100152a3e4b50670bd4c2befa2"
+  inputs-digest = "cf3970d34b3e906cf2991874cb517d82247d858b5584fd78b4973d1c5e97bf03"
   solver-name = "gps-cdcl"
   solver-version = 1
