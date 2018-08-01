@@ -21,6 +21,9 @@ type Vulnerability struct {
 	References     string
 }
 
+// VulnerabilityReport stores the list of all vulnerabilities/weaknesses found by provider
+type VulnerabilityReport map[string][]Vulnerability
+
 // VulnFetcher fetches vulnerabilities
 type VulnFetcher interface {
 	Fetch() error
