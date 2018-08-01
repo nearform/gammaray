@@ -91,7 +91,7 @@ func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityR
 		return nil, err
 	}
 
-	fmt.Println("Docker image decompressed in <", imageFolder, ">")
+	fmt.Println("Docker image <", imageName, "> decompressed in <", imageFolder, ">")
 
 	manifestFile, err := ioutil.ReadFile(path.Join(imageFolder, "manifest.json"))
 	if err != nil {
