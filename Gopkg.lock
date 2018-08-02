@@ -8,17 +8,63 @@
   version = "v1.4.2"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/dsnet/compress"
+  name = "github.com/Microsoft/go-winio"
+  packages = ["."]
+  revision = "a6d595ae73cf27a1b8fc32930668708f45ce1c85"
+  version = "v0.4.9"
+
+[[projects]]
+  name = "github.com/docker/distribution"
   packages = [
-    ".",
-    "bzip2",
-    "bzip2/internal/sais",
-    "internal",
-    "internal/errors",
-    "internal/prefix"
+    "digest",
+    "reference"
   ]
-  revision = "cc9eb1d7ad760af14e8f918698f745e80377af4f"
+  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
+  version = "v2.6.2"
+
+[[projects]]
+  name = "github.com/docker/docker"
+  packages = [
+    "api/types",
+    "api/types/blkiodev",
+    "api/types/container",
+    "api/types/events",
+    "api/types/filters",
+    "api/types/mount",
+    "api/types/network",
+    "api/types/reference",
+    "api/types/registry",
+    "api/types/strslice",
+    "api/types/swarm",
+    "api/types/time",
+    "api/types/versions",
+    "api/types/volume",
+    "client",
+    "pkg/tlsconfig"
+  ]
+  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
+  version = "v1.13.1"
+
+[[projects]]
+  name = "github.com/docker/go-connections"
+  packages = [
+    "nat",
+    "sockets",
+    "tlsconfig"
+  ]
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+  version = "v0.4.0"
+
+[[projects]]
+  name = "github.com/docker/go-units"
+  packages = ["."]
+  revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
+  version = "v0.3.3"
+
+[[projects]]
+  name = "github.com/gen2brain/go-unarr"
+  packages = ["."]
+  revision = "2adf16213a3c6333c47708458fe777f9e193e396"
 
 [[projects]]
   name = "github.com/google/go-cmp"
@@ -32,16 +78,16 @@
   version = "v0.2.0"
 
 [[projects]]
-  name = "github.com/mholt/archiver"
+  name = "github.com/jaffee/commandeer"
   packages = ["."]
-  revision = "cdc68dd1f170b8dfc1a0d2231b5bb0967ed67006"
-  version = "v2.0"
+  revision = "d0012ff26169b05dca5c14910d9415ae389efb8e"
+  version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/nwaples/rardecode"
+  name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "e06696f847aeda6f39a8f0b7cdff193b7690aef6"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/spacemeshos/go-spacemesh"
@@ -50,19 +96,25 @@
   version = "v0.3"
 
 [[projects]]
-  name = "github.com/ulikunitz/xz"
+  branch = "master"
+  name = "golang.org/x/net"
   packages = [
-    ".",
-    "internal/hash",
-    "internal/xlog",
-    "lzma"
+    "context",
+    "context/ctxhttp",
+    "internal/socks",
+    "proxy"
   ]
-  revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
-  version = "v0.5.4"
+  revision = "49c15d80dfbc983ea25246ee959d970efe09ec09"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["windows"]
+  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "09ed926acb7b28a91b40ad7a2be52e0925a4685d42a2ec208ef93dfa866af25e"
+  inputs-digest = "a79a545f3787c78453d5708e5f92b5397026e2f530cc40e4d65b07b311bd72e7"
   solver-name = "gps-cdcl"
   solver-version = 1

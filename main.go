@@ -5,114 +5,68 @@ import (
 	"log"
 	"os"
 
-	"github.com/nearform/gammaray/pathrunner"
-	"github.com/nearform/gammaray/vulnfetcher/nodeswg"
-	"github.com/nearform/gammaray/vulnfetcher/ossvulnfetcher"
+	"github.com/jaffee/commandeer"
+	"github.com/nearform/gammaray/analyzer"
+	"github.com/nearform/gammaray/docker"
+	"github.com/nearform/gammaray/vulnfetcher"
 )
 
-// OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
-const OSSIndexURL = "https://ossindex.net/api/v3/component-report"
-const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
+// Args CLI arguments
+type Args struct {
+	Path    string `help:"path to installed Node package (locally or inside the container, depending if 'image' is provided)"`
+	Image   string `help:"analyze this docker image"`
+	LogFile string `help:"in which file to put the detailed logs"`
+}
+
+// Defaults generate default CLI values
+func Defaults() *Args {
+	return &Args{
+		Path:    "",
+		Image:   "",
+		LogFile: ".gammaray.log",
+	}
+}
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: gammaray <folder>")
+	err := commandeer.Run(Defaults())
+	if err != nil {
+		fmt.Println("Error:", err, "\n\nYou may want to check the logs (by default in <", Defaults().LogFile, ">) for more details")
+		log.Println("Error:", err)
 		os.Exit(1)
 	}
+}
 
-	f, err := os.OpenFile(".gammaray.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+// Run the program once CLI args are parsed
+func (m *Args) Run() error {
+	f, err := os.OpenFile(m.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
-	}
-	defer f.Close()
-
-	log.SetOutput(f)
-
-	packageList, err := pathrunner.Walk(os.Args[1])
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	// keep only valid packages
-	var packages []pathrunner.NodePackage
-	for _, pkg := range packageList {
-		if pkg.Name == "" {
-			log.Print("Ignoring package with empty name")
-			continue
-		}
-		if pkg.Version == "" {
-			pkg.Version = "*"
-		}
-		packages = append(packages, pkg)
-	}
-
-	ossFetcher := ossvulnfetcher.New(OSSIndexURL)
-	err = ossFetcher.Fetch()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	nodeswgFetcher := nodeswg.New(nodeswgURL)
-	err = nodeswgFetcher.Fetch()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	vulnerabilitiesOSS, err := ossFetcher.TestAll(packages)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	if len(vulnerabilitiesOSS) > 0 {
-		fmt.Println("🚨 Some vulnerabilities found by OSS Index")
-		var pkg string
-		var pkgversion string
-		for _, vulnerability := range vulnerabilitiesOSS {
-			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
-				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
-			}
-			pkg = vulnerability.Package
-			pkgversion = vulnerability.PackageVersion
-
-			fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
-			fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
-				vulnerability.CVE,
-				vulnerability.Title,
-				vulnerability.Description,
-				vulnerability.References,
-			)
-		}
+		fmt.Printf("Error opening log file: %v", err)
 	} else {
-		fmt.Println("✅ No Vulnerability found by OSS Index")
+		defer f.Close()
+		log.SetOutput(f)
 	}
 
-	vulnerabilitiesNodeSWG, err := nodeswgFetcher.TestAll(packages)
-	if len(vulnerabilitiesNodeSWG) > 0 {
-		fmt.Println("🚨 Some vulnerabilities found by Node Security Working Group")
-		var pkg string
-		var pkgversion string
-		for _, vulnerability := range vulnerabilitiesNodeSWG {
-			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
-				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
-			}
-			pkg = vulnerability.Package
-			pkgversion = vulnerability.PackageVersion
-			fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
-			fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tVersions: %s\n\t\t\tFixed: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
-				vulnerability.CVE,
-				vulnerability.Title,
-				vulnerability.Versions,
-				vulnerability.Fixed,
-				vulnerability.Description,
-				vulnerability.References,
-			)
+	_, err = m.Analyze()
+	return err
+}
+
+// Analyze the path or docker image for vulnerabilities
+func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
+
+	if m.Image == "" && m.Path != "" {
+		return analyzer.Analyze(m.Path)
+	} else if m.Image != "" {
+		if m.Path != "" {
+			fmt.Println("Will scan folder <", m.Path, "> from docker image <", m.Image, ">")
+		} else {
+			fmt.Println("Will scan docker image <", m.Image, ">")
 		}
-	} else {
-		fmt.Println("✅ No Vulnerability found by Node Security Working Group")
-	}
 
+		return docker.ScanImage(m.Image, m.Path)
+	} else if len(os.Args) > 1 {
+		lastArg := os.Args[len(os.Args)-1]
+		fmt.Println("⚠ Will use the last argument <", lastArg, "> as '-path' value.")
+		return analyzer.Analyze(lastArg)
+	}
+	return nil, fmt.Errorf("you need to at least properly define a path or a docker image")
 }

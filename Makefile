@@ -15,7 +15,11 @@ install:
 	go get github.com/golang/dep
 	dep ensure
 
-dev-install: install
+build-test-docker-images:
+	docker build test_data/hello-world/ -t gammaray-test-hello-world:1.0.0
+	docker build test_data/insecure-project/ -t gammaray-test-insecure-project:1.0.0
+
+dev-install: install build-test-docker-images
 	go get -u github.com/mgechev/revive
 	go get -u github.com/mna/pigeon
 
@@ -24,6 +28,10 @@ ci-install: dev-install
 
 test:
 	go test -v -race ./...
+	go vet ./...
+
+coverage:
+	go test -v -race -cover ./...
 	go vet ./...
 
 ci-test: test

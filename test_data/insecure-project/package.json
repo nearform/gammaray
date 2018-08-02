@@ -1,0 +1,8 @@
+{
+  "name": "insecure-project",
+  "version": "0.0.1",
+  "description": "A test for gammaray",
+  "dependencies": {
+    "bassmaster": "1.0.0"
+  }
+}

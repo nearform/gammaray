@@ -62,30 +62,28 @@ func BuildCoordinate(name string, version string) string {
 }
 
 // ParseCVEFromTitle parses CVE identifier from title field ( it used to be a dedicated field in API v2, in API v3 it must be parsed...)
-func ParseCVEFromTitle(title string) string {
-	re := regexp.MustCompile("^\\s*\\[(CVE.*?)\\]")
+func ParseCVEFromTitle(title string) (string, string) {
+	re := regexp.MustCompile("^\\s*[\\[]\\s*(CVE.*?)\\s*[\\]]\\s*(.*?)$")
 	res := re.FindStringSubmatch(title)
 
-	if len(res) != 2 {
-		return ""
+	if len(res) != 3 {
+		return "", title
 	}
-	log.Print("CVE Found in Title: ", res[1])
-	return res[1]
+	log.Print("CVE Found in Title: ", res[1], " (Title: ", res[2], ")")
+	return res[1], res[2]
 }
 
-// Test checks for a single package vulnerabilities in OSSIndex
-// func (n *OSSIndexFetcher) Test(pkg pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
-// 	var array [1]pathrunner.NodePackage
-// 	array[0] = pkg
-// 	all, err := n.TestAll(array[:])
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	if len(all) < 1 {
-// 		return []vulnfetcher.Vulnerability, nil
-// 	}
-// 	return all[0], nil
-// }
+// ParseCWEFromTitle parses CWE identifier from title field ( it used to be a dedicated field in API v2, in API v3 it must be parsed...)
+func ParseCWEFromTitle(title string) (string, string) {
+	re := regexp.MustCompile("^\\s*(CWE.*?)\\s*?:\\s*(.*?)$")
+	res := re.FindStringSubmatch(title)
+
+	if len(res) != 3 {
+		return "", title
+	}
+	log.Print("CWE Found in Title: ", res[1], " (Title: ", res[2], ")")
+	return res[1], res[2]
+}
 
 // TestAll checks for a list of package vulnerabilities in OSSIndex
 func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
@@ -109,6 +107,10 @@ func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.
 
 // max batch length for API v3 is 128 entries
 func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+	if pkgs == nil {
+		log.Println("No package to check in OSSIndex")
+		return nil, nil
+	}
 	var coordinates []string
 	for _, pkg := range pkgs {
 		log.Print("build coordinates for:", pkg)
@@ -157,11 +159,18 @@ func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetche
 
 	for i, packageResponse := range structuredResponse {
 		for _, vulnerability := range packageResponse.Vulnerabilities {
+			cwe := ""
+			cve, title := ParseCVEFromTitle(vulnerability.Title)
+			if cve == "" {
+				cwe, title = ParseCWEFromTitle(vulnerability.Title)
+			}
+
 			processedVulnerability := vulnfetcher.Vulnerability{
 				Package:        pkgs[i].Name,
 				PackageVersion: pkgs[i].Version,
-				CVE:            ParseCVEFromTitle(vulnerability.Title),
-				Title:          vulnerability.Title,
+				CVE:            cve,
+				CWE:            cwe,
+				Title:          title,
 				Description:    vulnerability.Description,
 				Versions:       pkgs[i].Version,
 				References:     vulnerability.Reference,

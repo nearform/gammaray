@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mholt/archiver"
+	unarr "github.com/gen2brain/go-unarr"
 	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
@@ -62,16 +62,28 @@ func (n *Fetcher) Fetch() error {
 	}
 	defer response.Body.Close()
 
+	log.Println("Downloading NodeSWG Database into <", destFilePath, ">")
 	_, err = io.Copy(destFile, response.Body)
 	if err != nil {
 		return err
 	}
+	log.Println("Opening NodeSWG Database Archive in <", destFilePath, ">")
 
-	archiver.Zip.Open(destFilePath, unzipFolder)
+	a, err := unarr.NewArchive(destFilePath)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Decompressing NodeSWG Database in <", unzipFolder, ">")
+	err = a.Extract(unzipFolder)
+	if err != nil {
+		return err
+	}
 
 	err = filepath.Walk(vulnFolder, func(path string, f os.FileInfo, err error) error {
 
 		if strings.HasSuffix(path, ".json") {
+			log.Println("Opening NodeSWG Database file <", path, ">")
 			jsonFile, err := os.Open(path)
 			if err != nil {
 				return err
@@ -89,6 +101,9 @@ func (n *Fetcher) Fetch() error {
 
 		return nil
 	})
+
+	log.Println("Found <", len(n.vulnerabilities), "> entries in NodeSWG Database")
+
 	return err
 }
 
@@ -119,7 +134,7 @@ func (n *Fetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerab
 				Fixed:          vulnerability.FixedVersions,
 				References:     strings.Join(vulnerability.References, "\n\n"),
 			}
-			log.Println("✨ Node SWG Vulnerability check for ", name, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+			log.Println("✨ Node SWG Vulnerability check for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
 			isImpacted, err := vulnfetcher.IsImpactedByVulnerability(name, version, &vuln)
 			if err != nil {
 				return nil, err
@@ -127,7 +142,7 @@ func (n *Fetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerab
 			if !isImpacted {
 				continue
 			}
-			log.Println("✨ Node SWG Vulnerability found for ", name, "(", version, ") in '", vuln.Versions, "' excluding '", vuln.Fixed, "'")
+			log.Println("✨ Node SWG Vulnerability found for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
 			vulnerabilities = append(vulnerabilities, vuln)
 		}
 
