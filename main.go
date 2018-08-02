@@ -32,9 +32,8 @@ func main() {
 	if err != nil {
 		fmt.Println("Error:", err, "\n\nYou may want to check the logs (by default in <", Defaults().LogFile, ">) for more details")
 		log.Println("Error:", err)
+		os.Exit(1)
 	}
-
-	os.Exit(1)
 }
 
 // Run the program once CLI args are parsed
