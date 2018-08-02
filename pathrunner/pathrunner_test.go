@@ -1,0 +1,41 @@
+package pathrunner
+
+import (
+	"log"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestWalkHelloWorld(t *testing.T) {
+	packages, err := Walk("../test_data/hello-world")
+	if err != nil {
+		panic(err)
+	}
+	log.Println("TestWalkInsecureProject: packages:\n", packages)
+	if diff := cmp.Diff(len(packages), 1); diff != "" {
+		t.Errorf("TestHelloWorld: packages : (-got +want)\n%s", diff)
+	}
+}
+
+func TestWalkInsecureProject(t *testing.T) {
+	packages, err := Walk("../test_data/insecure-project")
+	if err != nil {
+		panic(err)
+	}
+	log.Println("TestWalkInsecureProject: packages:\n", packages)
+	if diff := cmp.Diff(len(packages), 4); diff != "" {
+		t.Errorf("TestWalkInsecureProject: packages : (-got +want)\n%s", diff)
+	}
+}
+
+func TestWalkDevNull(t *testing.T) {
+	packages, err := Walk("/dev/null")
+	if err != nil {
+		panic(err)
+	}
+	log.Println("TestWalkInsecureProject: packages:\n", packages)
+	if diff := cmp.Diff(len(packages), 0); diff != "" {
+		t.Errorf("TestWalkInsecureProject: packages : (-got +want)\n%s", diff)
+	}
+}
