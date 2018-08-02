@@ -1,3 +1,5 @@
 vendor
 gammaray
 dist
+debug.test
+*.log

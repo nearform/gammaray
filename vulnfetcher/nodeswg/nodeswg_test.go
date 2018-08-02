@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nearform/gammaray/pathrunner"
 	"github.com/spacemeshos/go-spacemesh/assert"
 )
 
@@ -38,14 +39,14 @@ func TestTestExistingPackage(t *testing.T) {
 	err := nodeFetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := nodeFetcher.Test("bassmaster", "1.0")
+	vulnerabilities, err := nodeFetcher.Test(pathrunner.NodePackage{Name: "bassmaster", Version: "1.0"})
 	assert.NoErr(t, err)
 	assert.Equal(t, 1, len(vulnerabilities), "number of vulns")
 	assert.Equal(t, "CVE-2014-7205", vulnerabilities[0].CVE, "CVE")
 	assert.Equal(t, "Arbitrary JavaScript Execution", vulnerabilities[0].Title, "Title")
 	assert.True(t, strings.HasPrefix(vulnerabilities[0].Description, "A vulnerability exists in bassmaster"), "Description")
 	assert.Equal(t, "<=1.5.1", vulnerabilities[0].Versions, "Version")
-	assert.True(t, strings.HasPrefix(vulnerabilities[0].References, "- https://www.npmjs.org/package/bassmaster"))
+	assert.True(t, strings.HasPrefix(vulnerabilities[0].References, "https://www.npmjs.org/package/bassmaster"))
 }
 
 func TestTestExistingPackageWithFixedVersion(t *testing.T) {
@@ -58,7 +59,7 @@ func TestTestExistingPackageWithFixedVersion(t *testing.T) {
 	err := nodeFetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := nodeFetcher.Test("bassmaster", "1.6.0")
+	vulnerabilities, err := nodeFetcher.Test(pathrunner.NodePackage{Name: "bassmaster", Version: "1.6.0"})
 	assert.NoErr(t, err)
 	assert.Equal(t, 0, len(vulnerabilities), "number of vulns")
 }
@@ -73,7 +74,7 @@ func TestTestUnexistingPackage(t *testing.T) {
 	err := nodeFetcher.Fetch()
 	assert.NoErr(t, err)
 
-	vulnerabilities, err := nodeFetcher.Test("test", "unexisting")
+	vulnerabilities, err := nodeFetcher.Test(pathrunner.NodePackage{Name: "test", Version: "unexisting"})
 	assert.NoErr(t, err)
 	assert.Equal(t, 0, len(vulnerabilities), "number of vulns")
 }
