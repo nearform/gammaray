@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +16,7 @@ import (
 	unarr "github.com/gen2brain/go-unarr"
 	"github.com/nearform/gammaray/analyzer"
 	"github.com/nearform/gammaray/vulnfetcher"
+	"golang.org/x/net/context"
 )
 
 type DockerImageFiles struct {
@@ -40,59 +40,59 @@ func Cleanup(path string) {
 	}
 }
 
-// ScanImage extracts an image and analyzes its layers
-func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityReport, error) {
-	ctx := context.Background()
-	cli, err := docker.NewEnvClient()
-	if err != nil {
-		log.Println("Could not connect to docker")
-		return nil, err
-	}
-
+func pullImageIfNecessary(ctx context.Context, imageName string, cli *docker.Client) error {
 	reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		log.Println("Cannot pull image <", imageName, ">, will try to use a local version")
-		// return nil, err
-	} else {
-		// io.Copy(os.Stdout, reader) //JSONLD pull logs
-		_, err = ioutil.ReadAll(reader)
-		if err != nil {
-			log.Println("Could not pull image <", imageName, ">")
-			return nil, err
-		}
+		log.Println("⚠️ Cannot pull image <", imageName, ">, will try to use a local version")
+		return nil
 	}
 
+	// io.Copy(os.Stdout, reader) //JSONLD pull logs
+	_, err = ioutil.ReadAll(reader)
+	if err != nil {
+		log.Println("Could not pull image <", imageName, ">")
+		return err
+	}
+
+	return nil
+}
+
+func extractImageArchive(tarFile string, imageFolder string, imageName string) error {
+	a, err := unarr.NewArchive(tarFile)
+	if err != nil {
+		log.Println("Could not open docker image <", tarFile, ">")
+		return err
+	}
+	err = a.Extract(imageFolder)
+	if err != nil {
+		log.Println("Could not extract docker image <", tarFile, ">")
+		return err
+	}
+
+	fmt.Println("Docker image <", imageName, "> decompressed in <", imageFolder, ">")
+	return nil
+}
+
+func exportImageLocally(ctx context.Context, imageName string, imageFolder string, cli *docker.Client) error {
 	response, err := cli.ImageSave(ctx, []string{imageName})
 	if err != nil {
 		log.Println("Could not save image <", imageName, ">")
-		return nil, err
+		return err
 	}
-	imageFolder := path.Join(os.TempDir(), strconv.FormatInt(time.Now().Unix(), 10))
-
-	defer Cleanup(imageFolder)
 
 	tarFile := imageFolder + ".tar"
 
 	f, err := os.Create(tarFile)
 	if err != nil {
-		log.Println("Could create image <", imageName, "> tar <", tarFile, ">")
-		return nil, err
+		log.Println("Could not create image <", imageName, "> tar <", tarFile, ">")
+		return err
 	}
 	io.Copy(f, response)
 
-	a, err := unarr.NewArchive(tarFile)
-	if err != nil {
-		log.Println("Could not open docker image <", tarFile, ">")
-		return nil, err
-	}
-	err = a.Extract(imageFolder)
-	if err != nil {
-		log.Println("Could not extract docker image <", tarFile, ">")
-		return nil, err
-	}
+	return extractImageArchive(tarFile, imageFolder, imageName)
+}
 
-	fmt.Println("Docker image <", imageName, "> decompressed in <", imageFolder, ">")
-
+func readManifest(imageFolder string, imageName string) (*DockerImageFiles, error) {
 	manifestFile, err := ioutil.ReadFile(path.Join(imageFolder, "manifest.json"))
 	if err != nil {
 		log.Println("Could not open docker image manifest!")
@@ -111,11 +111,10 @@ func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityR
 		log.Println("⚠️ Will only analyze what is described by the first entry of the manifest.json of image <", imageName, "> : for more details, check ", path.Join(imageFolder, "manifest.json"))
 	}
 
-	manifest := manifests[0]
-	fmt.Println("Decompressing docker image layers...")
+	return &manifests[0], nil
+}
 
-	snapshotPath := path.Join(imageFolder, "snapshot")
-
+func extractLayers(imageFolder string, snapshotPath string, manifest *DockerImageFiles) error {
 	for _, layerFile := range manifest.Layers {
 		layerPath := path.Join(imageFolder, layerFile)
 		fmt.Println("Decompressing layer <", layerPath, ">")
@@ -123,15 +122,18 @@ func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityR
 		a, err := unarr.NewArchive(layerPath)
 		if err != nil {
 			log.Println("Could not read layer <", layerPath, ">!")
-			return nil, err
+			return err
 		}
 		err = a.Extract(snapshotPath)
 		if err != nil {
 			log.Println("Could not extract layer <", layerPath, ">!")
-			return nil, err
+			return err
 		}
 	}
+	return nil
+}
 
+func readImageConfig(imageFolder string, manifest *DockerImageFiles) (*DockerConfig, error) {
 	configFile, err := ioutil.ReadFile(path.Join(imageFolder, manifest.Config))
 	if err != nil {
 		log.Println("Could not open docker image configuration!")
@@ -145,8 +147,50 @@ func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityR
 		log.Println("Could not unmarshal docker image configuration!")
 		return nil, err
 	}
+	return &config, nil
+}
+
+// ScanImage extracts an image and analyzes its layers
+func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityReport, error) {
+	ctx := context.Background()
+	cli, err := docker.NewEnvClient()
+	if err != nil {
+		log.Println("Could not connect to docker")
+		return nil, err
+	}
+
+	err = pullImageIfNecessary(ctx, imageName, cli)
+	if err != nil {
+		return nil, err
+	}
+
+	imageFolder := path.Join(os.TempDir(), strconv.FormatInt(time.Now().Unix(), 10))
+	exportImageLocally(ctx, imageName, imageFolder, cli)
+	if err != nil {
+		return nil, err
+	}
+	defer Cleanup(imageFolder)
+
+	manifest, err := readManifest(imageFolder, imageName)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Decompressing docker image layers...")
+
+	snapshotPath := path.Join(imageFolder, "snapshot")
+
+	err = extractLayers(imageFolder, snapshotPath, manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := readImageConfig(imageFolder, manifest)
+	if err != nil {
+		return nil, err
+	}
 	imageProjectPath := config.ContainerConfig.WorkingDir
 	if projectPath != "" {
+		fmt.Println("Using provided -path <", projectPath, "> instead of docker's working directory <", config.ContainerConfig.WorkingDir, ">")
 		imageProjectPath = projectPath
 	}
 
