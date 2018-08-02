@@ -89,11 +89,7 @@ func (n *Fetcher) Fetch() error {
 
 		return nil
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Test tests for a vulnerability on a single package
