@@ -20,6 +20,13 @@ type NodePackage struct {
 func Walk(dir string) ([]NodePackage, error) {
 	var packagesList []NodePackage
 
+	fileInfo, err := os.Stat(dir)
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.IsDir() {
+		return nil, fmt.Errorf("<%s> is not a directory, make sure to put the proper path to your project", dir)
+	}
 	filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 
 		if strings.HasSuffix(path, "package.json") {

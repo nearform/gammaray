@@ -38,3 +38,14 @@ func TestInsecureProject(t *testing.T) {
 	}
 
 }
+
+func TestNotExistingProject(t *testing.T) {
+	_, err := Analyze("./does-not-exist")
+	if err == nil {
+		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
+	}
+	if diff := cmp.Diff(err.Error(), "stat ./does-not-exist: no such file or directory"); diff != "" {
+		t.Errorf("TestNotExistingProject: err : (-got +want)\n%s", diff)
+	}
+
+}

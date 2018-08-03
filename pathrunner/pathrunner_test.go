@@ -30,12 +30,18 @@ func TestWalkInsecureProject(t *testing.T) {
 }
 
 func TestWalkDevNull(t *testing.T) {
-	packages, err := Walk("/dev/null")
-	if err != nil {
+	_, err := Walk("/dev/null")
+	if err == nil {
 		panic(err)
 	}
-	log.Println("TestWalkInsecureProject: packages:\n", packages)
-	if diff := cmp.Diff(len(packages), 0); diff != "" {
-		t.Errorf("TestWalkInsecureProject: packages : (-got +want)\n%s", diff)
+	if diff := cmp.Diff(err.Error(), "</dev/null> is not a directory, make sure to put the proper path to your project"); diff != "" {
+		t.Errorf("TestWalkDevNull: err : (-got +want)\n%s", diff)
+	}
+}
+
+func TestWalkDoesNotExist(t *testing.T) {
+	_, err := Walk("./does-not-exist")
+	if err == nil {
+		t.Errorf("TestWalkDoesNotExist: given ./does-not-exist does not exist, it should Error !")
 	}
 }
