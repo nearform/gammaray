@@ -1,7 +1,9 @@
 package versionformatter
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -144,9 +146,9 @@ func TestOrExpression(t *testing.T) {
 }
 
 func TestComplexExpression(t *testing.T) {
-	res, _ := Format(" >=0.08beta-1 || !1.rc.1 <=1.rc+build.543 || >2 ")
+	res, _ := Format(">=0.08beta-1 || !1.rc.1 <=1.rc+build.543 || ^2 ~3 4.0.x")
 	fmt.Println("TestComplexExpression result:", res)
-	if diff := cmp.Diff(res, ">=0.8.0-beta-1 || !1.0.0-rc.1 || <=1.0.0-rc+build.543 || >2.0.0"); diff != "" {
+	if diff := cmp.Diff(res, ">=0.8.0-beta-1 || !1.0.0-rc.1 || <=1.0.0-rc+build.543 || ^2.0.0 || ~3.0.0 || 4.0.x"); diff != "" {
 		t.Errorf("TestComplexExpression: after Format : (-got +want)\n%s", diff)
 	}
 }
@@ -165,4 +167,25 @@ func TestSimplePipeExpression(t *testing.T) {
 	if diff := cmp.Diff(res, "2.0.0 || 2.0.0-x || 2.1.0-x || 2.1.1 || 2.1.2"); diff != "" {
 		t.Errorf("TestComplexExpression: after Format : (-got +want)\n%s", diff)
 	}
+}
+
+func testToIfaceSliceNil(t *testing.T) {
+
+	if diff := cmp.Diff(toIfaceSlice(nil), nil); diff != "" {
+		t.Errorf("testToIfaceSliceNil: should be nil : (-got +want)\n%s", diff)
+	}
+}
+
+func TestComplexExpressionWithAllOptions(t *testing.T) {
+	stats := Stats{}
+	res, _ := Format(">=0.08beta-1 || !1.rc.1 <=1.rc+build.543 || ^2 ~3 4.0.x", Debug(true), Memoize(true), Statistics(&stats, "no match"))
+	fmt.Println("TestComplexExpression result:", res)
+	if diff := cmp.Diff(res, ">=0.8.0-beta-1 || !1.0.0-rc.1 || <=1.0.0-rc+build.543 || ^2.0.0 || ~3.0.0 || 4.0.x"); diff != "" {
+		t.Errorf("TestComplexExpression: after Format : (-got +want)\n%s", diff)
+	}
+	b, err := json.MarshalIndent(stats.ChoiceAltCnt, "", "  ")
+	if err != nil {
+		log.Panicln(err)
+	}
+	fmt.Println(string(b))
 }
