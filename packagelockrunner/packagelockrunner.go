@@ -3,6 +3,7 @@ package packagelockrunner
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path"
 
@@ -47,6 +48,7 @@ func (self PackageLockRunner) ErrorContext(err error) string {
 // Walk inspects a folder's package-lock.json to get all the packages used
 func (self PackageLockRunner) Walk(dir string) ([]nodepackage.NodePackage, error) {
 	self.directory = dir
+	log.Println("Starting Package-Lock Runner on <", dir, ">")
 	var packageList []nodepackage.NodePackage
 
 	fileInfo, err := os.Stat(dir)
@@ -75,5 +77,10 @@ func (self PackageLockRunner) Walk(dir string) ([]nodepackage.NodePackage, error
 	packageList = append(packageList, nodepackage.NodePackage{Name: packageLock.Name, Version: packageLock.Version})
 	packageList = append(packageList, packageDeps...)
 
+	if len(packageList) == 1 {
+		log.Println("Pakage-Lock Runner only found the project itself <", dir, ">")
+	} else if len(packageList) == 0 {
+		log.Println("Pakage-Lock Runner found no dependency in <", dir, ">")
+	}
 	return packageList, nil
 }

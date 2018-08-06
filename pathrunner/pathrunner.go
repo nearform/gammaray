@@ -24,8 +24,9 @@ func (self PathRunner) ErrorContext(err error) string {
 
 // Walk inspects a folder looking for packages
 func (self PathRunner) Walk(dir string) ([]nodepackage.NodePackage, error) {
+	log.Println("Starting Path Runner on <", dir, ">")
 	self.directory = dir
-	var packagesList []nodepackage.NodePackage
+	var packageList []nodepackage.NodePackage
 
 	fileInfo, err := os.Stat(dir)
 	if err != nil {
@@ -47,10 +48,14 @@ func (self PathRunner) Walk(dir string) ([]nodepackage.NodePackage, error) {
 				log.Println("Error parsing data from <", path, ">:\n", err)
 				fmt.Println("⚠️ Will ignore invalid 'package.json' <", path, "> file")
 			}
-			packagesList = append(packagesList, packageFile)
+			packageList = append(packageList, packageFile)
 		}
 		return nil
 	})
-
-	return packagesList, nil
+	if len(packageList) == 1 {
+		log.Println("Path Runner only found the project itself <", dir, ">")
+	} else if len(packageList) == 0 {
+		log.Println("Path Runner found no dependency in <", dir, ">")
+	}
+	return packageList, nil
 }
