@@ -1,9 +1,12 @@
 package analyzer
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
+	"github.com/nearform/gammaray/nodepackage"
+	"github.com/nearform/gammaray/packagelockrunner"
 	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 	"github.com/nearform/gammaray/vulnfetcher/nodeswg"
@@ -14,16 +17,51 @@ import (
 const OSSIndexURL = "https://ossindex.net/api/v3/component-report"
 const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
 
+func runWalkers(path string, walkers []nodepackage.Walker) ([]nodepackage.NodePackage, error) {
+	var errs []error
+	var mainPackage []nodepackage.NodePackage
+	for _, walker := range walkers {
+		packageList, err := walker.Walk(path)
+		if packageList != nil {
+			if len(packageList) > 1 {
+				return packageList, nil
+			}
+			// only found the main package, but no dependency using this method
+			// just continue with other ways to check if we find more
+			// can happen for example with pathrunner, if no 'npm i' has been done
+			mainPackage = packageList
+		}
+		if err != nil {
+			fmt.Println("⚠️", walker.ErrorContext(err), ":\n", err)
+			errs = append(errs, err)
+		}
+	}
+	if mainPackage != nil {
+		return mainPackage, nil
+	}
+	if len(errs) == len(walkers) {
+		return nil, errors.New("could not find any dependencies and all strategies to find them failed")
+	}
+	return nil, nil
+}
+
 // Analyze analyzes a path to an installed (npm install) node package
-func Analyze(path string) (vulnfetcher.VulnerabilityReport, error) {
+func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
 	fmt.Println("Will scan folder <", path, ">")
-	packageList, err := pathrunner.Walk(path)
+	if walkers == nil {
+		walkers = []nodepackage.Walker{
+			pathrunner.PathRunner{},
+			packagelockrunner.PackageLockRunner{},
+		}
+	}
+
+	packageList, err := runWalkers(path, walkers)
 	if err != nil {
 		return nil, err
 	}
 
 	// keep only valid packages
-	var packages []pathrunner.NodePackage
+	var packages []nodepackage.NodePackage
 	for _, pkg := range packageList {
 		if pkg.Name == "" {
 			log.Print("Ignoring package with empty name")

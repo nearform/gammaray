@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	unarr "github.com/gen2brain/go-unarr"
-	"github.com/nearform/gammaray/pathrunner"
+	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
@@ -108,12 +108,12 @@ func (n *Fetcher) Fetch() error {
 }
 
 // Test tests for a vulnerability on a single package
-func (n *Fetcher) Test(pkg pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
-	return n.TestAll(append(make([]pathrunner.NodePackage, 0, 1), pkg))
+func (n *Fetcher) Test(pkg nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+	return n.TestAll(append(make([]nodepackage.NodePackage, 0, 1), pkg))
 }
 
 // TestAll tests for a vulnerability
-func (n *Fetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+func (n *Fetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	var vulnerabilities []vulnfetcher.Vulnerability
 
 	for _, pkg := range pkgs {

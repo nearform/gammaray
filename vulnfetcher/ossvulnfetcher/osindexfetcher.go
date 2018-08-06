@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nearform/gammaray/pathrunner"
+	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
@@ -86,7 +86,7 @@ func ParseCWEFromTitle(title string) (string, string) {
 }
 
 // TestAll checks for a list of package vulnerabilities in OSSIndex
-func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+func (n *OSSIndexFetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	if len(pkgs) <= 128 {
 		return n.testBatch(pkgs)
 	}
@@ -106,7 +106,7 @@ func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.
 }
 
 // max batch length for API v3 is 128 entries
-func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+func (n *OSSIndexFetcher) testBatch(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	if pkgs == nil {
 		log.Println("No package to check in OSSIndex")
 		return nil, nil

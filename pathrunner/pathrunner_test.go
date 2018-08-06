@@ -8,7 +8,7 @@ import (
 )
 
 func TestWalkHelloWorld(t *testing.T) {
-	packages, err := Walk("../test_data/hello-world")
+	packages, err := PathRunner{}.Walk("../test_data/hello-world")
 	if err != nil {
 		panic(err)
 	}
@@ -19,7 +19,7 @@ func TestWalkHelloWorld(t *testing.T) {
 }
 
 func TestWalkInsecureProject(t *testing.T) {
-	packages, err := Walk("../test_data/insecure-project")
+	packages, err := PathRunner{}.Walk("../test_data/insecure-project")
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func TestWalkInsecureProject(t *testing.T) {
 }
 
 func TestWalkDevNull(t *testing.T) {
-	_, err := Walk("/dev/null")
+	_, err := PathRunner{}.Walk("/dev/null")
 	if err == nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func TestWalkDevNull(t *testing.T) {
 }
 
 func TestWalkDoesNotExist(t *testing.T) {
-	_, err := Walk("./does-not-exist")
+	_, err := PathRunner{}.Walk("./does-not-exist")
 	if err == nil {
 		t.Errorf("TestWalkDoesNotExist: given ./does-not-exist does not exist, it should Error !")
 	}

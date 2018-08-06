@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -42,6 +43,13 @@ func TestScanImageInsecureProject(t *testing.T) {
 		if diff := cmp.Diff(providerVulns, 2); diff != "" {
 			t.Errorf("TestInsecureProject: %s vulnerabilities : (-got +want)\n%s", provider, diff)
 		}
+	}
+}
+
+func TestScanImageNotExisting(t *testing.T) {
+	_, err := ScanImage("gammaray-test-this-one-should not-exist", "")
+	if err == nil {
+		panic(fmt.Errorf("'gammaray-test-this-one-should not-exist' should not exist and create an error"))
 	}
 }
 
