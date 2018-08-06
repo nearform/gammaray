@@ -45,6 +45,26 @@ func runWalkers(path string, walkers []nodepackage.Walker) ([]nodepackage.NodePa
 	return nil, nil
 }
 
+func packagesCleanupAndDeduplication(packageList []nodepackage.NodePackage) []nodepackage.NodePackage {
+	packageMap := make(map[string]nodepackage.NodePackage)
+	for _, pkg := range packageList {
+		if pkg.Name == "" {
+			log.Print("Ignoring package with empty name")
+			continue
+		}
+		if pkg.Version == "" {
+			pkg.Version = "*"
+		}
+		packageMap[pkg.Name+"@"+pkg.Version] = pkg
+	}
+
+	var packages []nodepackage.NodePackage
+	for _, pkg := range packageMap {
+		packages = append(packages, pkg)
+	}
+	return packages
+}
+
 // Analyze analyzes a path to an installed (npm install) node package
 func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
 	fmt.Println("Will scan folder <", path, ">")
@@ -61,17 +81,7 @@ func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.Vulnerabil
 	}
 
 	// keep only valid packages
-	var packages []nodepackage.NodePackage
-	for _, pkg := range packageList {
-		if pkg.Name == "" {
-			log.Print("Ignoring package with empty name")
-			continue
-		}
-		if pkg.Version == "" {
-			pkg.Version = "*"
-		}
-		packages = append(packages, pkg)
-	}
+	packages := packagesCleanupAndDeduplication(packageList)
 
 	ossFetcher := ossvulnfetcher.New(OSSIndexURL)
 	err = ossFetcher.Fetch()
