@@ -44,9 +44,9 @@ func TestWalkNotInstalledSecureComplexProject(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("TestWalkInsecureProject: packages:\n", packages)
+	log.Println("TestWalkNotInstalledSecureComplexProject: packages:\n", packages)
 	if diff := cmp.Diff(len(packages), 1132); diff != "" {
-		t.Errorf("TestHelloWorld: packages : (-got +want)\n%s", diff)
+		t.Errorf("TestWalkNotInstalledSecureComplexProject: packages : (-got +want)\n%s", diff)
 	}
 }
 
