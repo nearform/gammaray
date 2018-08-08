@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nearform/gammaray/pathrunner"
+	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
@@ -86,7 +86,7 @@ func ParseCWEFromTitle(title string) (string, string) {
 }
 
 // TestAll checks for a list of package vulnerabilities in OSSIndex
-func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+func (n *OSSIndexFetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	if len(pkgs) <= 128 {
 		return n.testBatch(pkgs)
 	}
@@ -106,7 +106,7 @@ func (n *OSSIndexFetcher) TestAll(pkgs []pathrunner.NodePackage) ([]vulnfetcher.
 }
 
 // max batch length for API v3 is 128 entries
-func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetcher.Vulnerability, error) {
+func (n *OSSIndexFetcher) testBatch(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	if pkgs == nil {
 		log.Println("No package to check in OSSIndex")
 		return nil, nil
@@ -134,15 +134,15 @@ func (n *OSSIndexFetcher) testBatch(pkgs []pathrunner.NodePackage) ([]vulnfetche
 	responseData, err := ioutil.ReadAll(response.Body)
 	switch {
 	case s >= 500:
-		log.Fatalf("Error 500:\n%s\nquery:\n%s", responseData, data)
-		return nil, fmt.Errorf("Error: OSSIndex is unavailable:\n%s\nclient request resulting in error: %s", responseData, data)
+		log.Printf("Error 500:\n%s\nquery:\n%s", responseData, data)
+		return nil, fmt.Errorf("OSSIndex is unavailable:\n%s\nclient request resulting in error: %s", responseData, data)
 	case s == 429:
-		log.Fatalf("Should retry:\n%s\nquery:\n%s", responseData, data)
-		return nil, fmt.Errorf("Error: OSSIndex : 'Too many requests':\n%s\nclient request resulting in error: %s", responseData, data)
+		log.Printf("Should retry:\n%s\nquery:\n%s", responseData, data)
+		return nil, fmt.Errorf("OSSIndex : 'Too many requests':\n%s\nclient request resulting in error: %s", responseData, data)
 	case s >= 400:
-		log.Fatalf("Error 40X:\n%s\nquery:\n%s", responseData, data)
+		log.Printf("Error 40X:\n%s\nquery:\n%s", responseData, data)
 		// Don't retry, it was client's fault
-		return nil, fmt.Errorf("Error: OSSIndex client error:\n%s\nclient request resulting in error: %s", responseData, data)
+		return nil, fmt.Errorf("OSSIndex client error:\n%s\nclient request resulting in error: %s", responseData, data)
 	}
 
 	if err != nil {

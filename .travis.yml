@@ -7,7 +7,7 @@ sudo: required
 
 services:
   - docker
-  
+
 before_install:
   - export PATH="$PATH:$GOPATH/bin"
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -20,5 +20,5 @@ notifications:
   email: false
 
 script:
-  - make test
+  - make verbose-test
   - $GOPATH/bin/goveralls -service=travis-ci

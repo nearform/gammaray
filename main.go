@@ -8,22 +8,26 @@ import (
 	"github.com/jaffee/commandeer"
 	"github.com/nearform/gammaray/analyzer"
 	"github.com/nearform/gammaray/docker"
+	"github.com/nearform/gammaray/nodepackage"
+	"github.com/nearform/gammaray/packagelockrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 )
 
 // Args CLI arguments
 type Args struct {
-	Path    string `help:"path to installed Node package (locally or inside the container, depending if 'image' is provided)"`
-	Image   string `help:"analyze this docker image"`
-	LogFile string `help:"in which file to put the detailed logs"`
+	Path            string `help:"path to installed Node package (locally or inside the container, depending if 'image' is provided)"`
+	Image           string `help:"analyze this docker image"`
+	LogFile         string `help:"in which file to put the detailed logs"`
+	OnlyPackageLock bool   `help:"force <package-lock.json> usage (false: use it as a fallback)"`
 }
 
 // Defaults generate default CLI values
 func Defaults() *Args {
 	return &Args{
-		Path:    "",
-		Image:   "",
-		LogFile: ".gammaray.log",
+		Path:            "",
+		Image:           "",
+		LogFile:         ".gammaray.log",
+		OnlyPackageLock: false,
 	}
 }
 
@@ -52,9 +56,14 @@ func (m *Args) Run() error {
 
 // Analyze the path or docker image for vulnerabilities
 func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
-
+	var walkers []nodepackage.Walker
+	if m.OnlyPackageLock == true {
+		walkers = []nodepackage.Walker{
+			packagelockrunner.PackageLockRunner{},
+		}
+	}
 	if m.Image == "" && m.Path != "" {
-		return analyzer.Analyze(m.Path)
+		return analyzer.Analyze(m.Path, walkers...)
 	} else if m.Image != "" {
 		if m.Path != "" {
 			fmt.Println("Will scan folder <", m.Path, "> from docker image <", m.Image, ">")
@@ -62,11 +71,11 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 			fmt.Println("Will scan docker image <", m.Image, ">")
 		}
 
-		return docker.ScanImage(m.Image, m.Path)
+		return docker.ScanImage(m.Image, m.Path, walkers...)
 	} else if len(os.Args) > 1 {
 		lastArg := os.Args[len(os.Args)-1]
 		fmt.Println("⚠ Will use the last argument <", lastArg, "> as '-path' value.")
-		return analyzer.Analyze(lastArg)
+		return analyzer.Analyze(lastArg, walkers...)
 	}
 	return nil, fmt.Errorf("you need to at least properly define a path or a docker image")
 }

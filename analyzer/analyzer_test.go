@@ -44,7 +44,7 @@ func TestNotExistingProject(t *testing.T) {
 	if err == nil {
 		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
 	}
-	if diff := cmp.Diff(err.Error(), "stat ./does-not-exist: no such file or directory"); diff != "" {
+	if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
 		t.Errorf("TestNotExistingProject: err : (-got +want)\n%s", diff)
 	}
 

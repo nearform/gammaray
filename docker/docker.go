@@ -15,6 +15,7 @@ import (
 	docker "github.com/docker/docker/client"
 	unarr "github.com/gen2brain/go-unarr"
 	"github.com/nearform/gammaray/analyzer"
+	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
 	"golang.org/x/net/context"
 )
@@ -151,7 +152,7 @@ func readImageConfig(imageFolder string, manifest *DockerImageFiles) (*DockerCon
 }
 
 // ScanImage extracts an image and analyzes its layers
-func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityReport, error) {
+func ScanImage(imageName string, projectPath string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
 	ctx := context.Background()
 	cli, err := docker.NewEnvClient()
 	if err != nil {
@@ -195,5 +196,5 @@ func ScanImage(imageName string, projectPath string) (vulnfetcher.VulnerabilityR
 	}
 
 	fmt.Println("Analyze image stored in <", imageProjectPath, ">")
-	return analyzer.Analyze(path.Join(imageFolder, "snapshot", imageProjectPath))
+	return analyzer.Analyze(path.Join(imageFolder, "snapshot", imageProjectPath), walkers...)
 }

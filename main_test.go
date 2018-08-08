@@ -23,7 +23,8 @@ func TestHelloWorld(t *testing.T) {
 		Path:    "test_data/hello-world",
 	}).Run()
 	if err != nil {
-		panic(err)
+		t.Error(err)
+		return
 	}
 	info, error := os.Stat(testLogFile)
 	if error != nil {
@@ -45,7 +46,8 @@ func TestInsecureProject(t *testing.T) {
 		Path:    "test_data/insecure-project",
 	}).Run()
 	if err != nil {
-		panic(err)
+		t.Error(err)
+		return
 	}
 	info, error := os.Stat(testLogFile)
 	if error != nil {
@@ -71,7 +73,7 @@ func TestPathDoesNotExist(t *testing.T) {
 		t.Errorf("TestPathDoesNotExist: there should be an error when trying to analyze ./does-not-exist")
 	}
 
-	if diff := cmp.Diff(err.Error(), "stat ./does-not-exist: no such file or directory"); diff != "" {
+	if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
 		t.Errorf("TestPathDoesNotExist: error : (-got +want)\n%s", diff)
 	}
 }
@@ -146,4 +148,28 @@ func TestMainHelloWorld(t *testing.T) {
 	if info.Size() == 0 {
 		t.Errorf("TestMainHelloWorld: log size should not be 0!")
 	}
+}
+
+func TestRunHelloWorld(t *testing.T) {
+	defer cleanLogs()
+
+	a := Args{Path: "test_data/hello-world"}
+
+	err := a.Run()
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
+func TestRunBadLogFile(t *testing.T) {
+	defer cleanLogs()
+
+	a := Args{Path: "test_data/hello-world", LogFile: "/dev/null"}
+
+	err := a.Run()
+	if err != nil {
+		t.Error(err)
+	}
+
 }
