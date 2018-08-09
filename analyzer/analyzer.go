@@ -11,6 +11,7 @@ import (
 	"github.com/nearform/gammaray/vulnfetcher"
 	"github.com/nearform/gammaray/vulnfetcher/nodeswg"
 	"github.com/nearform/gammaray/vulnfetcher/ossvulnfetcher"
+	"github.com/nearform/gammaray/yarnlockrunner"
 )
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
@@ -72,6 +73,7 @@ func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.Vulnerabil
 		walkers = []nodepackage.Walker{
 			pathrunner.PathRunner{},
 			packagelockrunner.PackageLockRunner{},
+			yarnlockrunner.YarnLockRunner{},
 		}
 	}
 

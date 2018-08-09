@@ -178,7 +178,7 @@ func testToIfaceSliceNil(t *testing.T) {
 
 func TestComplexExpressionWithAllOptions(t *testing.T) {
 	stats := Stats{}
-	res, _ := Format(">=0.08beta-1 || !1.rc.1 <=1.rc+build.543 || ^2 ~3 4.0.x", Debug(true), Memoize(true), Statistics(&stats, "no match"))
+	res, _ := Format(">=0.08beta-1 || !1.rc.1 <=1.rc+build.543 || ^2 ~3 4.0.x", Debug(true), Memoize(true), AllowInvalidUTF8(true), Entrypoint("Input"), Entrypoint(""), MaxExpressions(12800000), Statistics(&stats, "no match"))
 	fmt.Println("TestComplexExpression result:", res)
 	if diff := cmp.Diff(res, ">=0.8.0-beta-1 || !1.0.0-rc.1 || <=1.0.0-rc+build.543 || ^2.0.0 || ~3.0.0 || 4.0.x"); diff != "" {
 		t.Errorf("TestComplexExpression: after Format : (-got +want)\n%s", diff)
@@ -188,4 +188,24 @@ func TestComplexExpressionWithAllOptions(t *testing.T) {
 		log.Panicln(err)
 	}
 	fmt.Println(string(b))
+}
+
+func TestEmptyExpression(t *testing.T) {
+	_, err := Format("")
+	if err == nil {
+		t.Errorf("TestEmptyExpression: should Error for an empty expression : (-got +want)\n%s", err)
+	}
+	if diff := cmp.Diff(err.Error(), "1:1 (0): no match found, expected: \"!\", \"!=\", \"*\", \"<\", \"<=\", \"=\", \"==\", \">\", \">=\", \"X\", \"^\", \"x\", \"~\", [ \\t\\n\\r] or [0-9]"); diff != "" {
+		t.Errorf("TestEmptyExpression: after Format : (-got +want)\n%s", diff)
+	}
+}
+
+func TestSemverVersionWithSmallMaxExpression(t *testing.T) {
+	_, err := Format("1.0.0-rc1", MaxExpressions(1))
+	if err == nil {
+		t.Errorf("TestEmptyExpression: should Error for too small MaxExpression : (-got +want)\n%s", err)
+	}
+	if diff := cmp.Diff(err.Error(), "1:1 (0): rule Input: max number of expresssions parsed"); diff != "" {
+		t.Errorf("TestEmptyExpression: after Format : (-got +want)\n%s", diff)
+	}
 }

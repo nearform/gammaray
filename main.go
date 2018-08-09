@@ -10,7 +10,9 @@ import (
 	"github.com/nearform/gammaray/docker"
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/packagelockrunner"
+	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
+	"github.com/nearform/gammaray/yarnlockrunner"
 )
 
 // Args CLI arguments
@@ -18,7 +20,9 @@ type Args struct {
 	Path            string `help:"path to installed Node package (locally or inside the container, depending if 'image' is provided)"`
 	Image           string `help:"analyze this docker image"`
 	LogFile         string `help:"in which file to put the detailed logs"`
-	OnlyPackageLock bool   `help:"force <package-lock.json> usage (false: use it as a fallback)"`
+	OnlyInstalled   bool   `help:"force only installed module checking usage (default false: use it as the main strategy then use other fallbacks)"`
+	OnlyPackageLock bool   `help:"force only <package-lock.json> usage (default false: use it as a fallback)"`
+	OnlyYarnLock    bool   `help:"force only <yarn.lock> usage (default false: use it as a fallback)"`
 }
 
 // Defaults generate default CLI values
@@ -27,7 +31,9 @@ func Defaults() *Args {
 		Path:            "",
 		Image:           "",
 		LogFile:         ".gammaray.log",
+		OnlyInstalled:   false,
 		OnlyPackageLock: false,
+		OnlyYarnLock:    false,
 	}
 }
 
@@ -59,7 +65,15 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 	var walkers []nodepackage.Walker
 	if m.OnlyPackageLock == true {
 		walkers = []nodepackage.Walker{
+			pathrunner.PathRunner{},
+		}
+	} else if m.OnlyPackageLock == true {
+		walkers = []nodepackage.Walker{
 			packagelockrunner.PackageLockRunner{},
+		}
+	} else if m.OnlyYarnLock == true {
+		walkers = []nodepackage.Walker{
+			yarnlockrunner.YarnLockRunner{},
 		}
 	}
 	if m.Image == "" && m.Path != "" {

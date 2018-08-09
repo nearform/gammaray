@@ -1,0 +1,142 @@
+{
+// yarn.lock parser
+package yarnlockparser
+
+import (
+  "log"
+
+  "github.com/nearform/gammaray/nodepackage"
+)
+
+
+func ParseYarnLock(expression string, opts ...Option) ([]nodepackage.NodePackage, error) {
+  got, err := ParseReader("yarn.lock", strings.NewReader(expression), opts...)
+  if err != nil {
+    log.Println("👽 In :\n"+ expression + "<<EOF>>\n-->", err)
+    return nil, err
+  }
+  return got.([]nodepackage.NodePackage), err
+}
+
+func toIfaceSlice(v interface{}) []interface{} {
+  if v == nil {
+      return nil
+  }
+  return v.([]interface{})
+}
+}
+
+Input = Header deps:Body EOF {
+  return deps.([]nodepackage.NodePackage), nil
+}
+
+Header = CommentLine YarnLockfileVersionLine
+
+Body = LCNM* deps:(Dependency*) {
+  log.Println("👽 Body", deps)
+
+  depsSl := toIfaceSlice(deps)
+  var castedDeps []nodepackage.NodePackage
+  for _, dep := range(depsSl) {
+    castedDeps = append(castedDeps, dep.(nodepackage.NodePackage))
+  }
+  return castedDeps, nil
+}
+
+Dependency = (name:DependencyHeaderLine version:DependencyVersionLine DependencyResolvedLine (DependencyDependenciesHeaderLine DependencyDependency*)? (DependencyOptionalDependenciesHeaderLine DependencyOptionalDependency*)? LCNM*) {
+  dep := nodepackage.NodePackage{Name: name.(string), Version: version.(string)}
+  log.Println("👽 Package of DependencyHeaderLine", dep)
+  return dep, nil
+}
+
+DependencyHeaderLine = (name:ListOfPackageQueryExpression Colon ROL) {
+  log.Println("👽 Package of DependencyHeaderLine", name.(string))
+  return name.(string), nil
+}
+DependencyVersionLine = (__ "version" _+ version:VersionExpression ROL) {
+  log.Println("👽 Package of DependencyVersionLine", version.(string))
+  return version.(string), nil
+}
+DependencyResolvedLine = __ "resolved" IgnoredRestOfLine
+DependencyDependenciesHeaderLine = __ "dependencies" _* Colon ROL
+DependencyDependency = ____ PackageNameExpression _+ VersionQueryExpression ROL
+DependencyOptionalDependenciesHeaderLine = __ "optionalDependencies" _* Colon ROL
+DependencyOptionalDependency = ____ PackageNameExpression _+ VersionQueryExpression ROL
+
+ListOfPackageQueryExpression = name:PackageQueryExpression  (_* Comma _* PackageQueryExpression)* {
+  log.Println("👽 Package of ListOfPackageQueryExpression", name.(string))
+  return name.(string), nil
+}
+PackageQueryExpression = (Quote name:PackageQuery Quote) {
+    log.Println("👽 Quoted PackageQuery", name.(string))
+    return name.(string), nil
+  } / name:PackageQuery {
+    log.Println("👽 PackageQuery", name.(string))
+    return name.(string), nil
+  }
+
+PackageQuery = (name:PackageName Arobase VersionQuery) {
+  return name.(string), nil
+}
+
+PackageNameExpression = (Quote PackageName Quote / PackageName)
+PackageName = (Scope Slash PackageChars) {
+    log.Println("👽 Package with Scope", string(c.text))
+    return string(c.text), nil
+  } / PackageChars {
+    log.Println("👽 Package", string(c.text))
+    return string(c.text), nil
+  }
+
+
+VersionQueryExpression = (Quote VersionQuery Quote) / VersionQuery
+VersionExpression "a quoted version number" = (Quote version:Version Quote) {
+  log.Println("👽 VersionExpression", version.(string))
+  return version.(string), nil
+}
+Scope = Arobase ScopeChars
+
+LCNM "an empty or commented line" = NewLine/CommentLine/(_+ NewLine)
+
+ROL = CommentLine / EmptyRestOfLine
+CommentLine = _* Comment EOL
+IgnoredRestOfLine = NotEOL? EOL
+EmptyRestOfLine = _* EOL
+
+YarnLockfileVersionLine = Hash _ "yarn lockfile v1" EOL
+Comment = Hash NotEOL
+
+PackageChars = UrlSafeCharNoDotNoUnderscore UrlSafeChar*
+ScopeChars = UrlSafeCharNoDotNoUnderscore UrlSafeChar*
+
+VersionQuery "a semver version query" = ([0-9^~<>!=xX*. |a-zA-Z]/"-")+
+Version "a version number" = ([0-9.+a-zA-Z]/"-")+ {
+  log.Println("👽 Version", string(c.text))
+  return string(c.text), nil
+}
+
+Alpha = [a-zA-Z]
+Digit = [0-9]
+
+UrlSafeCharNoDotNoUnderscore = Alpha / Digit / "-" / "~"
+UrlSafeChar = Alpha / Digit / "-" / "." / "_" / "~"
+
+Hash "a hash" = "#"
+Quote "a double quote"= "\""
+Comma "a comma" = ","
+Colon "a colon" = ":"
+Arobase "an arobase" = "@"
+Slash "a slash" = "/"
+
+NotEOL "any charchter but EOL/EOF" = [^\r\n]*
+EOL "End of Line (EOL) or End of File (EOF)" = NewLine / EOF
+NewLine = "\r\n" / "\n"
+
+____ "double indent" = __ __
+__ "single indent" = indent indent
+
+indent = [ \t]
+
+_ "a whitespace" = [ \t]
+
+EOF = !.

@@ -1,14 +1,17 @@
 all: clean install build
 
-formatter:
+formatter: peg
+
+peg:
 	pigeon -o versionformatter/versionformatter.go versionformatter/versionformatter.peg
+	pigeon -o yarnlockparser/yarnlockparser.go yarnlockparser/yarnlockparser.peg
 
 .PHONY: clean
 clean:
 	@rm -rf vendor || true
 	@rm gammaray || true
 
-build: formatter
+build: peg
 	go build -v -race
 
 install:
