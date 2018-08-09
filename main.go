@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"strings"
 
 	"github.com/jaffee/commandeer"
 	"github.com/nearform/gammaray/analyzer"
@@ -13,6 +13,7 @@ import (
 	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 	"github.com/nearform/gammaray/yarnlockrunner"
+	log "github.com/sirupsen/logrus"
 )
 
 // Args CLI arguments
@@ -20,6 +21,8 @@ type Args struct {
 	Path            string `help:"path to installed Node package (locally or inside the container, depending if 'image' is provided)"`
 	Image           string `help:"analyze this docker image"`
 	LogFile         string `help:"in which file to put the detailed logs"`
+	LogLevel        string `help:"minimal level that should be logged"`
+	LogAsJSON       bool   `help:"detailed logs should be formated as JSON if true (default: false)"`
 	OnlyInstalled   bool   `help:"force only installed module checking usage (default false: use it as the main strategy then use other fallbacks)"`
 	OnlyPackageLock bool   `help:"force only <package-lock.json> usage (default false: use it as a fallback)"`
 	OnlyYarnLock    bool   `help:"force only <yarn.lock> usage (default false: use it as a fallback)"`
@@ -31,6 +34,8 @@ func Defaults() *Args {
 		Path:            "",
 		Image:           "",
 		LogFile:         ".gammaray.log",
+		LogLevel:        "info",
+		LogAsJSON:       false,
 		OnlyInstalled:   false,
 		OnlyPackageLock: false,
 		OnlyYarnLock:    false,
@@ -46,8 +51,32 @@ func main() {
 	}
 }
 
+func (m *Args) getLogLevel() log.Level {
+
+	switch strings.ToLower(strings.TrimSpace(m.LogLevel)) {
+	case "panic":
+		return log.PanicLevel
+	case "fatal":
+		return log.FatalLevel
+	case "error":
+		return log.ErrorLevel
+	case "warn":
+		return log.WarnLevel
+	case "info":
+		return log.InfoLevel
+	case "debug":
+		return log.DebugLevel
+	default:
+		return log.InfoLevel
+	}
+}
+
 // Run the program once CLI args are parsed
 func (m *Args) Run() error {
+	if m.LogAsJSON == true {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
+	log.SetLevel(m.getLogLevel())
 	f, err := os.OpenFile(m.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Printf("Error opening log file: %v", err)
@@ -80,9 +109,9 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 		return analyzer.Analyze(m.Path, walkers...)
 	} else if m.Image != "" {
 		if m.Path != "" {
-			fmt.Println("Will scan folder <", m.Path, "> from docker image <", m.Image, ">")
+			fmt.Println("🔍 Will scan folder <", m.Path, "> from docker image <", m.Image, ">")
 		} else {
-			fmt.Println("Will scan docker image <", m.Image, ">")
+			fmt.Println("🔍 Will scan docker image <", m.Image, ">")
 		}
 
 		return docker.ScanImage(m.Image, m.Path, walkers...)

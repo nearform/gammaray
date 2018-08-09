@@ -2,10 +2,10 @@ package vulnfetcher
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Masterminds/semver"
 	"github.com/nearform/gammaray/versionformatter"
+	log "github.com/sirupsen/logrus"
 )
 
 // Vulnerability describes a vulnerability
@@ -42,7 +42,7 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 		fmt.Printf("Error parsing module version '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
 	}
-	log.Println("version", moduleVersion, "👉", version)
+	log.Debug("version", moduleVersion, "👉", version)
 	ver, err := semver.NewVersion(version)
 	if err != nil {
 		fmt.Printf("Error parsing Package version of module '%s'(%s): %q\n", module, moduleVersion, err)
@@ -50,7 +50,7 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 	}
 
 	vulnVersions, err := tryToMakeValidVersion(vulnerability.Versions)
-	log.Println("Vulnerable Versions", vulnerability.Versions, "👉", vulnVersions)
+	log.Debug("Vulnerable Versions", vulnerability.Versions, "👉", vulnVersions)
 	if err != nil {
 		fmt.Printf("Error parsing Vulnerability version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return true, err
@@ -63,16 +63,16 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isVuln = rangeVuln.Check(ver)
 	if !isVuln {
-		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅")
+		log.Debug(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅")
 		return false, err
 	}
 
 	if vulnerability.Fixed == "" {
-		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌")
+		log.Debug(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌")
 		return true, nil
 	}
 	fixedVersions, err := tryToMakeValidVersion(vulnerability.Fixed)
-	log.Println("fixedVersions", vulnerability.Fixed, "👉", fixedVersions)
+	log.Debug("fixedVersions", vulnerability.Fixed, "👉", fixedVersions)
 	if err != nil {
 		fmt.Printf("Error parsing Fixed version range of module '%s'(%s): %q\n", module, moduleVersion, err)
 		return false, err
@@ -85,9 +85,9 @@ func IsImpactedByVulnerability(module string, moduleVersion string, vulnerabilit
 
 	var isFixed = rangeFixed.Check(ver)
 	if isFixed {
-		log.Println(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅ (part of the fixed versions)")
+		log.Info(module, "(", moduleVersion, ") is not subject to a known vulnerability or weakness ✅ (part of the fixed versions)")
 	} else {
-		log.Println(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌ (not part of the fixed versions)")
+		log.Warn(module, "(", moduleVersion, ") is subject to a known vulnerability or weakness! ❌ (not part of the fixed versions)")
 	}
 
 	return !isFixed, nil

@@ -1,7 +1,7 @@
 package pathrunner
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"

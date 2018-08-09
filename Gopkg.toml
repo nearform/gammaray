@@ -40,3 +40,7 @@
 [[constraint]]
   name = "github.com/gen2brain/go-unarr"
   revision = "2adf16213a3c6333c47708458fe777f9e193e396"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.6"

@@ -3,7 +3,6 @@ package analyzer
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/packagelockrunner"
@@ -12,6 +11,7 @@ import (
 	"github.com/nearform/gammaray/vulnfetcher/nodeswg"
 	"github.com/nearform/gammaray/vulnfetcher/ossvulnfetcher"
 	"github.com/nearform/gammaray/yarnlockrunner"
+	log "github.com/sirupsen/logrus"
 )
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
@@ -50,7 +50,7 @@ func packagesCleanupAndDeduplication(packageList []nodepackage.NodePackage) []no
 	packageMap := make(map[string]nodepackage.NodePackage)
 	for _, pkg := range packageList {
 		if pkg.Name == "" {
-			log.Print("Ignoring package with empty name")
+			log.Debug("🔍 Ignoring package with empty name")
 			continue
 		}
 		if pkg.Version == "" {
@@ -68,7 +68,7 @@ func packagesCleanupAndDeduplication(packageList []nodepackage.NodePackage) []no
 
 // Analyze analyzes a path to an installed (npm install) node package
 func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
-	fmt.Println("Will scan folder <", path, ">")
+	fmt.Println("🔍 Will scan folder <", path, ">")
 	if walkers == nil {
 		walkers = []nodepackage.Walker{
 			pathrunner.PathRunner{},

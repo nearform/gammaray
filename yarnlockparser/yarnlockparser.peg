@@ -3,18 +3,18 @@
 package yarnlockparser
 
 import (
-  "log"
-
   "github.com/nearform/gammaray/nodepackage"
+  log "github.com/sirupsen/logrus"
 )
 
 
 func ParseYarnLock(expression string, opts ...Option) ([]nodepackage.NodePackage, error) {
   got, err := ParseReader("yarn.lock", strings.NewReader(expression), opts...)
   if err != nil {
-    log.Println("👽 In :\n"+ expression + "<<EOF>>\n-->", err)
+    log.Error("👽 In :\n"+ expression + "<<EOF>>\n-->", err)
     return nil, err
   }
+  log.Debug("👽 In :\n"+ expression + "<<EOF>>\n-->", got)
   return got.([]nodepackage.NodePackage), err
 }
 
@@ -33,7 +33,7 @@ Input = Header deps:Body EOF {
 Header = CommentLine YarnLockfileVersionLine
 
 Body = LCNM* deps:(Dependency*) {
-  log.Println("👽 Body", deps)
+  log.Debug("👽 Body", deps)
 
   depsSl := toIfaceSlice(deps)
   var castedDeps []nodepackage.NodePackage
@@ -45,16 +45,16 @@ Body = LCNM* deps:(Dependency*) {
 
 Dependency = (name:DependencyHeaderLine version:DependencyVersionLine DependencyResolvedLine (DependencyDependenciesHeaderLine DependencyDependency*)? (DependencyOptionalDependenciesHeaderLine DependencyOptionalDependency*)? LCNM*) {
   dep := nodepackage.NodePackage{Name: name.(string), Version: version.(string)}
-  log.Println("👽 Package of DependencyHeaderLine", dep)
+  log.Debug("👽 Package of DependencyHeaderLine", dep)
   return dep, nil
 }
 
 DependencyHeaderLine = (name:ListOfPackageQueryExpression Colon ROL) {
-  log.Println("👽 Package of DependencyHeaderLine", name.(string))
+  log.Debug("👽 Package of DependencyHeaderLine", name.(string))
   return name.(string), nil
 }
 DependencyVersionLine = (__ "version" _+ version:VersionExpression ROL) {
-  log.Println("👽 Package of DependencyVersionLine", version.(string))
+  log.Debug("👽 Package of DependencyVersionLine", version.(string))
   return version.(string), nil
 }
 DependencyResolvedLine = __ "resolved" IgnoredRestOfLine
@@ -64,14 +64,14 @@ DependencyOptionalDependenciesHeaderLine = __ "optionalDependencies" _* Colon RO
 DependencyOptionalDependency = ____ PackageNameExpression _+ VersionQueryExpression ROL
 
 ListOfPackageQueryExpression = name:PackageQueryExpression  (_* Comma _* PackageQueryExpression)* {
-  log.Println("👽 Package of ListOfPackageQueryExpression", name.(string))
+  log.Debug("👽 Package of ListOfPackageQueryExpression", name.(string))
   return name.(string), nil
 }
 PackageQueryExpression = (Quote name:PackageQuery Quote) {
-    log.Println("👽 Quoted PackageQuery", name.(string))
+    log.Debug("👽 Quoted PackageQuery", name.(string))
     return name.(string), nil
   } / name:PackageQuery {
-    log.Println("👽 PackageQuery", name.(string))
+    log.Debug("👽 PackageQuery", name.(string))
     return name.(string), nil
   }
 
@@ -81,17 +81,17 @@ PackageQuery = (name:PackageName Arobase VersionQuery) {
 
 PackageNameExpression = (Quote PackageName Quote / PackageName)
 PackageName = (Scope Slash PackageChars) {
-    log.Println("👽 Package with Scope", string(c.text))
+    log.Debug("👽 Package with Scope", string(c.text))
     return string(c.text), nil
   } / PackageChars {
-    log.Println("👽 Package", string(c.text))
+    log.Debug("👽 Package", string(c.text))
     return string(c.text), nil
   }
 
 
 VersionQueryExpression = (Quote VersionQuery Quote) / VersionQuery
 VersionExpression "a quoted version number" = (Quote version:Version Quote) {
-  log.Println("👽 VersionExpression", version.(string))
+  log.Debug("👽 VersionExpression", version.(string))
   return version.(string), nil
 }
 Scope = Arobase ScopeChars
@@ -111,7 +111,7 @@ ScopeChars = UrlSafeCharNoDotNoUnderscore UrlSafeChar*
 
 VersionQuery "a semver version query" = ([0-9^~<>!=xX*. |a-zA-Z]/"-")+
 Version "a version number" = ([0-9.+a-zA-Z]/"-")+ {
-  log.Println("👽 Version", string(c.text))
+  log.Debug("👽 Version", string(c.text))
   return string(c.text), nil
 }
 

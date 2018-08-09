@@ -90,10 +90,22 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
+
+[[projects]]
   name = "github.com/spacemeshos/go-spacemesh"
   packages = ["assert"]
   revision = "f4a642e43d5bee3f8acf4f413d8c49e0fadd1d2e"
   version = "v0.3"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
@@ -109,12 +121,15 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a79a545f3787c78453d5708e5f92b5397026e2f530cc40e4d65b07b311bd72e7"
+  inputs-digest = "02d08daf6c051d6bbb5bbed7af6a8f379621812bd23b074071f61419e35683bb"
   solver-name = "gps-cdcl"
   solver-version = 1

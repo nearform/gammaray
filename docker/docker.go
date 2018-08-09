@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strconv"
@@ -17,6 +16,7 @@ import (
 	"github.com/nearform/gammaray/analyzer"
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 
@@ -34,24 +34,24 @@ type DockerContainerConfig struct {
 }
 
 func Cleanup(path string) {
-	fmt.Println("Cleanup temporary docker files")
+	log.Infoln("Cleanup temporary docker files at <", path, ">")
 	err := os.RemoveAll(path)
 	if err != nil {
-		log.Println("⚠️ Could not remove temporary docker image extraction folder <", path, ">:\n", err)
+		log.Warnln("⚠️ Could not remove temporary docker file <", path, ">:\n", err)
 	}
 }
 
 func pullImageIfNecessary(ctx context.Context, imageName string, cli *docker.Client) error {
 	reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		log.Println("⚠️ Cannot pull image <", imageName, ">, will try to use a local version")
+		log.Warnln("⚠️ Cannot pull image <", imageName, ">, will try to use a local version")
 		return nil
 	}
 
 	// io.Copy(os.Stdout, reader) //JSONLD pull logs
 	_, err = ioutil.ReadAll(reader)
 	if err != nil {
-		log.Println("Could not pull image <", imageName, ">")
+		log.Errorln("Could not pull image <", imageName, ">")
 		return err
 	}
 
@@ -61,23 +61,23 @@ func pullImageIfNecessary(ctx context.Context, imageName string, cli *docker.Cli
 func extractImageArchive(tarFile string, imageFolder string, imageName string) error {
 	a, err := unarr.NewArchive(tarFile)
 	if err != nil {
-		log.Println("Could not open docker image <", tarFile, ">")
+		log.Errorln("Could not open docker image <", tarFile, ">")
 		return err
 	}
 	err = a.Extract(imageFolder)
 	if err != nil {
-		log.Println("Could not extract docker image <", tarFile, ">")
+		log.Errorln("Could not extract docker image <", tarFile, ">")
 		return err
 	}
 
-	fmt.Println("Docker image <", imageName, "> decompressed in <", imageFolder, ">")
+	fmt.Println("🗃 Docker image <", imageName, "> decompressed in <", imageFolder, ">")
 	return nil
 }
 
 func exportImageLocally(ctx context.Context, imageName string, imageFolder string, cli *docker.Client) error {
 	response, err := cli.ImageSave(ctx, []string{imageName})
 	if err != nil {
-		log.Println("Could not save image <", imageName, ">")
+		log.Errorln("Could not save image <", imageName, ">")
 		return err
 	}
 
@@ -85,7 +85,7 @@ func exportImageLocally(ctx context.Context, imageName string, imageFolder strin
 
 	f, err := os.Create(tarFile)
 	if err != nil {
-		log.Println("Could not create image <", imageName, "> tar <", tarFile, ">")
+		log.Errorln("Could not create image <", imageName, "> tar <", tarFile, ">")
 		return err
 	}
 	io.Copy(f, response)
@@ -97,20 +97,20 @@ func exportImageLocally(ctx context.Context, imageName string, imageFolder strin
 func readManifest(imageFolder string, imageName string) (*DockerImageFiles, error) {
 	manifestFile, err := ioutil.ReadFile(path.Join(imageFolder, "manifest.json"))
 	if err != nil {
-		log.Println("Could not open docker image manifest!")
+		log.Errorln("Could not open docker image manifest!")
 		return nil, err
 	}
 	var manifests []DockerImageFiles
 	err = json.Unmarshal(manifestFile, &manifests)
 	if err != nil {
-		log.Println("Could not unmarshal docker image manifest!")
+		log.Errorln("Could not unmarshal docker image manifest!")
 		return nil, err
 	}
 	if len(manifests) < 1 {
 		return nil, fmt.Errorf("docker image '%s' manifest.json does not contain enough data", imageName)
 	}
 	if len(manifests) > 1 {
-		log.Println("⚠️ Will only analyze what is described by the first entry of the manifest.json of image <", imageName, "> : for more details, check ", path.Join(imageFolder, "manifest.json"))
+		log.Warnln("⚠️ Will only analyze what is described by the first entry of the manifest.json of image <", imageName, "> : for more details, check ", path.Join(imageFolder, "manifest.json"))
 	}
 
 	return &manifests[0], nil
@@ -119,16 +119,16 @@ func readManifest(imageFolder string, imageName string) (*DockerImageFiles, erro
 func extractLayers(imageFolder string, snapshotPath string, manifest *DockerImageFiles) error {
 	for _, layerFile := range manifest.Layers {
 		layerPath := path.Join(imageFolder, layerFile)
-		fmt.Println("Decompressing layer <", layerPath, ">")
+		log.Debugln("🗃 Decompressing layer <", layerPath, ">")
 
 		a, err := unarr.NewArchive(layerPath)
 		if err != nil {
-			log.Println("Could not read layer <", layerPath, ">!")
+			log.Errorln("🗃 Could not read layer <", layerPath, ">!")
 			return err
 		}
 		err = a.Extract(snapshotPath)
 		if err != nil {
-			log.Println("Could not extract layer <", layerPath, ">!")
+			log.Errorln("Could not extract layer <", layerPath, ">!")
 			return err
 		}
 	}
@@ -138,15 +138,15 @@ func extractLayers(imageFolder string, snapshotPath string, manifest *DockerImag
 func readImageConfig(imageFolder string, manifest *DockerImageFiles) (*DockerConfig, error) {
 	configFile, err := ioutil.ReadFile(path.Join(imageFolder, manifest.Config))
 	if err != nil {
-		log.Println("Could not open docker image configuration!")
+		log.Errorln("Could not open docker image configuration!")
 		return nil, err
 	}
 
-	fmt.Println("Read docker image configuration...")
+	log.Infoln("🗃 Read docker image configuration...")
 	var config DockerConfig
 	err = json.Unmarshal(configFile, &config)
 	if err != nil {
-		log.Println("Could not unmarshal docker image configuration!")
+		log.Errorln("Could not unmarshal docker image configuration!")
 		return nil, err
 	}
 	return &config, nil
@@ -157,7 +157,7 @@ func ScanImage(imageName string, projectPath string, walkers ...nodepackage.Walk
 	ctx := context.Background()
 	cli, err := docker.NewEnvClient()
 	if err != nil {
-		log.Println("Could not connect to docker")
+		log.Errorln("Could not connect to docker")
 		return nil, err
 	}
 
@@ -177,7 +177,7 @@ func ScanImage(imageName string, projectPath string, walkers ...nodepackage.Walk
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Decompressing docker image layers...")
+	log.Infoln("🗃 Decompressing docker image layers...")
 
 	snapshotPath := path.Join(imageFolder, "snapshot")
 
@@ -192,10 +192,10 @@ func ScanImage(imageName string, projectPath string, walkers ...nodepackage.Walk
 	}
 	imageProjectPath := config.ContainerConfig.WorkingDir
 	if projectPath != "" {
-		fmt.Println("Using provided -path <", projectPath, "> instead of docker's working directory <", config.ContainerConfig.WorkingDir, ">")
+		log.Infoln("🗃 Using provided -path <", projectPath, "> instead of docker's working directory <", config.ContainerConfig.WorkingDir, ">")
 		imageProjectPath = projectPath
 	}
 
-	fmt.Println("Analyze image stored in <", imageProjectPath, ">")
+	fmt.Println("🗃 Analyze package stored at <", imageProjectPath, "> in image <", imageName, ">...")
 	return analyzer.Analyze(path.Join(imageFolder, "snapshot", imageProjectPath), walkers...)
 }

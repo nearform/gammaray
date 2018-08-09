@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/nearform/gammaray/nodepackage"
+	log "github.com/sirupsen/logrus"
 )
 
 // PackageLockRunner used is used as a Walker interface
@@ -45,7 +45,7 @@ func (self PathRunner) Walk(dir string) ([]nodepackage.NodePackage, error) {
 			var packageFile nodepackage.NodePackage
 			err = json.Unmarshal(data, &packageFile)
 			if err != nil {
-				log.Println("Error parsing data from <", path, ">:\n", err)
+				log.Warnln("Error parsing data from <", path, ">:\n", err)
 				fmt.Println("⚠️ Will ignore invalid 'package.json' <", path, "> file")
 			}
 			packageList = append(packageList, packageFile)
@@ -53,9 +53,9 @@ func (self PathRunner) Walk(dir string) ([]nodepackage.NodePackage, error) {
 		return nil
 	})
 	if len(packageList) == 1 {
-		log.Println("Path Runner only found the project itself <", dir, ">")
+		log.Infoln("Path Runner only found the project itself <", dir, ">")
 	} else if len(packageList) == 0 {
-		log.Println("Path Runner found no dependency in <", dir, ">")
+		log.Warnln("Path Runner found no dependency in <", dir, ">")
 	}
 	return packageList, nil
 }

@@ -7,12 +7,14 @@
 // ^5 || <=5.0-beta     --> ^5.0.0 || <=5.0.0-beta
 package versionformatter
 
-import "log"
+import (
+  log "github.com/sirupsen/logrus"
+)
 
 func Format(expression string, opts ...Option) (string, error) {
   got, err := ParseReader("", strings.NewReader(expression), opts...)
   if err != nil {
-    log.Println("👮 In '"+ expression + "':\n", err)
+    log.Info("👮 In '"+ expression + "':\n", err)
     return "", err
   }
   return got.(string), err
@@ -27,7 +29,7 @@ func toIfaceSlice(v interface{}) []interface{} {
 }
 
 Input <- _ expr:(ExpressionList / Expression) _ EOF {
-  log.Println("👮 Input", expr.(string))
+  log.Debug("👮 Input", expr.(string))
   return expr.(string), nil
 }
 
@@ -40,19 +42,19 @@ ExpressionList <- head:Expression tail:(ExpressionSubList)+ {
   for _, part := range tailSl {
     res += part.(string)
   }
-  log.Println("👮 ExpressionList", res)
+  log.Debug("👮 ExpressionList", res)
   return res, nil
 }
 
 ExpressionSubList <- separator:ExpressionSeparator expr:Expression {
   res := separator.(string) + expr.(string)
-  log.Println("👮 ExpressionSubList", res)
+  log.Debug("👮 ExpressionSubList", res)
   return res, nil
 }
 
 Expression <- expr:(Range / SimpleExpression) {
   res := expr.(string)
-  log.Println("👮 Expression", res)
+  log.Debug("👮 Expression", res)
   return res, nil
 }
 
@@ -69,7 +71,7 @@ ExpressionSeparator <- (MandatoryWhiteSpace "||" MandatoryWhiteSpace /
                        "," /
                        "|" /
                        MandatoryWhiteSpace) {
-  log.Println("👮 ExpressionSeparator", string(c.text), "👉 ||")
+  log.Debug("👮 ExpressionSeparator", string(c.text), "👉 ||")
   return " || ", nil
 }
 
@@ -77,11 +79,11 @@ Range <- PrimitiveRange / HyphenRange / TildeRange / CaretRange / XRange
 
 PrimitiveRange <- (startop:StartRangeOperator start:Version s:InRangeSeparator endop:EndRangeOperator end:Version) {
   res := string(startop.([]uint8)) + start.(string) + ", " + string(endop.([]uint8)) + end.(string)
-  log.Println("👮 PrimitiveRange", res)
+  log.Debug("👮 PrimitiveRange", res)
   return res, nil
 } / (startop:EndRangeOperator start:Version s:InRangeSeparator endop:StartRangeOperator end:Version) {
   res := string(endop.([]uint8)) + end.(string) + ", " + string(startop.([]uint8)) + start.(string)
-  log.Println("👮 Reversed PrimitiveRange", res)
+  log.Debug("👮 Reversed PrimitiveRange", res)
   return res, nil
 }
 
@@ -98,7 +100,7 @@ InRangeSeparator <- MandatoryWhiteSpace "," MandatoryWhiteSpace /
                     "," /
                     "|" /
                     MandatoryWhiteSpace {
-  log.Println("👮 InRangeSeparator", string(c.text), "👉 \" \"")
+  log.Debug("👮 InRangeSeparator", string(c.text), "👉 \" \"")
   return string(", "), nil
 }
 
@@ -109,30 +111,30 @@ HyphenOperator <- MandatoryWhiteSpace "-" MandatoryWhiteSpace /
 
 HyphenRange <- (start:Version HyphenOperator end:Version) {
  var res = start.(string) + " - " + end.(string)
- log.Println("👮 HyphenRange", res)
+ log.Debug("👮 HyphenRange", res)
  return res, nil
 }
 
 XRange <- version:Version {
  var res = version.(string)
- log.Println("👮 XRange", res)
+ log.Debug("👮 XRange", res)
  return res, nil
 }
 
 TildeRange <- ("~" version:Version) {
  var res = "~" + version.(string)
- log.Println("👮 TildeRange", res)
+ log.Debug("👮 TildeRange", res)
  return res, nil
 }
 
 CaretRange <- ("^" version:Version) {
  var res = "^" + version.(string)
- log.Println("👮 CaretRange", res)
+ log.Debug("👮 CaretRange", res)
  return res, nil
 }
 
 SimpleExpression <- expr:UnaryAndVersion {
-  log.Println("👮 SimpleExpression", expr.(string))
+  log.Debug("👮 SimpleExpression", expr.(string))
   return expr.(string), nil
 }
 
@@ -148,9 +150,9 @@ OptionalUnary <- op:UnaryOperator? {
 }
 
 Version <- head:Major tail:OptionalMinorPatchPreRelease {
-  log.Println("👮 major", head)
+  log.Debug("👮 major", head)
   version := head.(string) + tail.(string)
-  log.Println("👮 whole version:", version)
+  log.Debug("👮 whole version:", version)
   return version, nil
 }
 
@@ -164,7 +166,7 @@ OptionalDotMinor <- minor:DotVersionPart? {
   if(minor == nil) {
     return ".0", nil
   }
-  log.Println("👮 minor", minor)
+  log.Debug("👮 minor", minor)
   return minor.(string), nil
 }
 
@@ -174,7 +176,7 @@ OptionalPatchPreRelease <- head:OptionalDotPatch tail:OptionalPreRelease {
   if(head == nil) {
     return ".0" + tail.(string), nil
   }
-  log.Println("👮 patch", head)
+  log.Debug("👮 patch", head)
   return head.(string) + tail.(string), nil
 
 }
@@ -199,7 +201,7 @@ OptionalPreRelease <- (Dash/Dot/Plus)? prerelease:PreRelease? {
   if(prerelease == nil) {
     return "", nil
   }
-  log.Println("👮 prerelease", prerelease)
+  log.Debug("👮 prerelease", prerelease)
   if(prerelease.(string) == "") {
     return "", nil
   }
@@ -246,7 +248,7 @@ Number "number" <- [0-9]+ {
 }
 
 Comparator <- ">=" / "<=" / "<" / ">" / "=" {
-  log.Println("👮 Comparator", c.text)
+  log.Debug("👮 Comparator", c.text)
   return string(c.text), nil
 }
 
