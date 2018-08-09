@@ -89,6 +89,7 @@ func exportImageLocally(ctx context.Context, imageName string, imageFolder strin
 		return err
 	}
 	io.Copy(f, response)
+	defer Cleanup(tarFile)
 
 	return extractImageArchive(tarFile, imageFolder, imageName)
 }
