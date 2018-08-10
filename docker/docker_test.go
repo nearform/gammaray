@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"testing"

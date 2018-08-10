@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
+	log "github.com/sirupsen/logrus"
 )
 
 // OSSComponentReport is a Component vulnerability report
@@ -69,7 +69,7 @@ func ParseCVEFromTitle(title string) (string, string) {
 	if len(res) != 3 {
 		return "", title
 	}
-	log.Print("CVE Found in Title: ", res[1], " (Title: ", res[2], ")")
+	log.Debug("CVE Found in Title: ", res[1], " (Title: ", res[2], ")")
 	return res[1], res[2]
 }
 
@@ -81,7 +81,7 @@ func ParseCWEFromTitle(title string) (string, string) {
 	if len(res) != 3 {
 		return "", title
 	}
-	log.Print("CWE Found in Title: ", res[1], " (Title: ", res[2], ")")
+	log.Debug("CWE Found in Title: ", res[1], " (Title: ", res[2], ")")
 	return res[1], res[2]
 }
 
@@ -108,20 +108,20 @@ func (n *OSSIndexFetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher
 // max batch length for API v3 is 128 entries
 func (n *OSSIndexFetcher) testBatch(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	if pkgs == nil {
-		log.Println("No package to check in OSSIndex")
+		log.Warn("No package to check in OSSIndex")
 		return nil, nil
 	}
 	var coordinates []string
 	for _, pkg := range pkgs {
-		log.Print("build coordinates for:", pkg)
+		log.Debug("build coordinates for:", pkg)
 		coordinates = append(coordinates, BuildCoordinate(pkg.Name, pkg.Version))
 	}
-	log.Print("batch coordinates list (", len(coordinates), " entries):", coordinates)
+	log.Info("Will query OSSIndex with a batch coordinates list of <", len(coordinates), "> entries")
 
 	request := &OSSPackageRequest{Coordinates: coordinates}
 	data, err := json.Marshal(request)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Execute the request
@@ -134,13 +134,13 @@ func (n *OSSIndexFetcher) testBatch(pkgs []nodepackage.NodePackage) ([]vulnfetch
 	responseData, err := ioutil.ReadAll(response.Body)
 	switch {
 	case s >= 500:
-		log.Printf("Error 500:\n%s\nquery:\n%s", responseData, data)
+		log.Errorf("Error 500:\n%s\nquery:\n%s", responseData, data)
 		return nil, fmt.Errorf("OSSIndex is unavailable:\n%s\nclient request resulting in error: %s", responseData, data)
 	case s == 429:
-		log.Printf("Should retry:\n%s\nquery:\n%s", responseData, data)
+		log.Errorf("Should retry:\n%s\nquery:\n%s", responseData, data)
 		return nil, fmt.Errorf("OSSIndex : 'Too many requests':\n%s\nclient request resulting in error: %s", responseData, data)
 	case s >= 400:
-		log.Printf("Error 40X:\n%s\nquery:\n%s", responseData, data)
+		log.Errorf("Error 40X:\n%s\nquery:\n%s", responseData, data)
 		// Don't retry, it was client's fault
 		return nil, fmt.Errorf("OSSIndex client error:\n%s\nclient request resulting in error: %s", responseData, data)
 	}
@@ -175,7 +175,7 @@ func (n *OSSIndexFetcher) testBatch(pkgs []nodepackage.NodePackage) ([]vulnfetch
 				Versions:       pkgs[i].Version,
 				References:     vulnerability.Reference,
 			}
-			log.Println("✨ OSS Vulnerability check for ", pkgs[i].Name, "(", pkgs[i].Version, ")")
+			log.Info("✨ OSS Vulnerability check for ", pkgs[i].Name, "(", pkgs[i].Version, ")")
 			vulnerabilities = append(vulnerabilities, processedVulnerability)
 		}
 	}

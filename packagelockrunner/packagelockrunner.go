@@ -3,11 +3,11 @@ package packagelockrunner
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path"
 
 	"github.com/nearform/gammaray/nodepackage"
+	log "github.com/sirupsen/logrus"
 )
 
 type PackageLock struct {

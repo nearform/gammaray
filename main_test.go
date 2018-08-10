@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	log "github.com/sirupsen/logrus"
 )
 
 var testLogFile = path.Join(os.TempDir(), "gammaray-log-test")
@@ -122,9 +122,14 @@ func TestImageHelloWorld(t *testing.T) {
 
 func TestDefaults(t *testing.T) {
 	expected := Args{
-		Path:    "",
-		Image:   "",
-		LogFile: ".gammaray.log",
+		Path:            "",
+		Image:           "",
+		LogFile:         ".gammaray.log",
+		LogLevel:        "info",
+		LogAsJSON:       false,
+		OnlyInstalled:   false,
+		OnlyPackageLock: false,
+		OnlyYarnLock:    false,
 	}
 
 	if diff := cmp.Diff(*Defaults(), expected); diff != "" {

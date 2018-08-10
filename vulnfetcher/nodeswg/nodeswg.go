@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -14,6 +13,7 @@ import (
 	unarr "github.com/gen2brain/go-unarr"
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/vulnfetcher"
+	log "github.com/sirupsen/logrus"
 )
 
 // Fetcher fetches node community vulnerabilities
@@ -43,7 +43,7 @@ func (n *Fetcher) Fetch() error {
 	tmpDir := path.Join(os.TempDir(), base64.StdEncoding.EncodeToString([]byte(n.DatabaseURL)))
 	os.Mkdir(tmpDir, os.ModePerm)
 
-	log.Print("Temporary directory for NodeSWG Database <", n.DatabaseURL, ">:\n", tmpDir)
+	log.Info("Temporary directory for NodeSWG Database <", n.DatabaseURL, ">:\n", tmpDir)
 	destFilePath := path.Join(tmpDir, "nodeswg.zip")
 	unzipFolder := path.Join(tmpDir, "nodeswg")
 	vulnFolder := path.Join(unzipFolder, "security-wg-master", "vuln", "npm")
@@ -62,19 +62,19 @@ func (n *Fetcher) Fetch() error {
 	}
 	defer response.Body.Close()
 
-	log.Println("Downloading NodeSWG Database into <", destFilePath, ">")
+	log.Debugln("Downloading NodeSWG Database into <", destFilePath, ">")
 	_, err = io.Copy(destFile, response.Body)
 	if err != nil {
 		return err
 	}
-	log.Println("Opening NodeSWG Database Archive in <", destFilePath, ">")
+	log.Debugln("Opening NodeSWG Database Archive in <", destFilePath, ">")
 
 	a, err := unarr.NewArchive(destFilePath)
 	if err != nil {
 		return err
 	}
 
-	log.Println("Decompressing NodeSWG Database in <", unzipFolder, ">")
+	log.Debugln("Decompressing NodeSWG Database in <", unzipFolder, ">")
 	err = a.Extract(unzipFolder)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (n *Fetcher) Fetch() error {
 	err = filepath.Walk(vulnFolder, func(path string, f os.FileInfo, err error) error {
 
 		if strings.HasSuffix(path, ".json") {
-			log.Println("Opening NodeSWG Database file <", path, ">")
+			log.Debugln("Opening NodeSWG Database file <", path, ">")
 			jsonFile, err := os.Open(path)
 			if err != nil {
 				return err
@@ -102,7 +102,7 @@ func (n *Fetcher) Fetch() error {
 		return nil
 	})
 
-	log.Println("Found <", len(n.vulnerabilities), "> entries in NodeSWG Database")
+	log.Infoln("Found <", len(n.vulnerabilities), "> entries in NodeSWG Database")
 
 	return err
 }
@@ -116,6 +116,7 @@ func (n *Fetcher) Test(pkg nodepackage.NodePackage) ([]vulnfetcher.Vulnerability
 func (n *Fetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnerability, error) {
 	var vulnerabilities []vulnfetcher.Vulnerability
 
+	log.Infoln("✨ Node SWG Vulnerability check for <", len(pkgs), "> packages")
 	for _, pkg := range pkgs {
 		name := pkg.Name
 		version := pkg.Version
@@ -134,7 +135,7 @@ func (n *Fetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnera
 				Fixed:          vulnerability.FixedVersions,
 				References:     strings.Join(vulnerability.References, "\n\n"),
 			}
-			log.Println("✨ Node SWG Vulnerability check for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
+			log.Debugln("✨ Node SWG Vulnerability check for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
 			isImpacted, err := vulnfetcher.IsImpactedByVulnerability(name, version, &vuln)
 			if err != nil {
 				return nil, err
@@ -142,7 +143,7 @@ func (n *Fetcher) TestAll(pkgs []nodepackage.NodePackage) ([]vulnfetcher.Vulnera
 			if !isImpacted {
 				continue
 			}
-			log.Println("✨ Node SWG Vulnerability found for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
+			log.Infoln("✨ Node SWG Vulnerability found for ", name, "(", version, ") in <", vuln.Versions, "> excluding <", vuln.Fixed, ">")
 			vulnerabilities = append(vulnerabilities, vuln)
 		}
 

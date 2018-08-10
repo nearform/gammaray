@@ -3,7 +3,7 @@ package versionformatter
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
