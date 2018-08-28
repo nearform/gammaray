@@ -45,16 +45,16 @@ Body = LCNM* deps:(Dependency*) {
 
 Dependency = (name:DependencyHeaderLine version:DependencyVersionLine DependencyResolvedLine (DependencyDependenciesHeaderLine DependencyDependency*)? (DependencyOptionalDependenciesHeaderLine DependencyOptionalDependency*)? LCNM*) {
   dep := nodepackage.NodePackage{Name: name.(string), Version: version.(string)}
-  log.Debug("👽 Package of DependencyHeaderLine", dep)
+  log.Debug("👽 Package of DependencyHeaderLine: ", dep)
   return dep, nil
 }
 
 DependencyHeaderLine = (name:ListOfPackageQueryExpression Colon ROL) {
-  log.Debug("👽 Package of DependencyHeaderLine", name.(string))
+  log.Debug("👽 Package of DependencyHeaderLine: ", name.(string))
   return name.(string), nil
 }
 DependencyVersionLine = (__ "version" _+ version:VersionExpression ROL) {
-  log.Debug("👽 Package of DependencyVersionLine", version.(string))
+  log.Debug("👽 Package of DependencyVersionLine: ", version.(string))
   return version.(string), nil
 }
 DependencyResolvedLine = __ "resolved" IgnoredRestOfLine
@@ -64,37 +64,39 @@ DependencyOptionalDependenciesHeaderLine = __ "optionalDependencies" _* Colon RO
 DependencyOptionalDependency = ____ PackageNameExpression _+ VersionQueryExpression ROL
 
 ListOfPackageQueryExpression = name:PackageQueryExpression  (_* Comma _* PackageQueryExpression)* {
-  log.Debug("👽 Package of ListOfPackageQueryExpression", name.(string))
+  log.Debug("👽 Package of ListOfPackageQueryExpression: ", name.(string))
   return name.(string), nil
 }
-PackageQueryExpression = (Quote name:PackageQuery Quote) {
-    log.Debug("👽 Quoted PackageQuery", name.(string))
-    return name.(string), nil
-  } / name:PackageQuery {
-    log.Debug("👽 PackageQuery", name.(string))
-    return name.(string), nil
-  }
+PackageQueryExpression = name:(QuotedPackageQuery / PackageQuery) {
+  log.Debug("👽 PackageQueryExpression: ", name.(string))
+  return name.(string), nil
+}
 
+QuotedPackageQuery = (Quote name:PackageName Arobase NotQuote+ Quote) {
+  log.Debug("👽 QuotedPackageQuery: ", name.(string))
+  return name.(string), nil
+}
 PackageQuery = (name:PackageName Arobase VersionQuery) {
+  log.Debug("👽 PackageQuery: ", name.(string))
   return name.(string), nil
 }
 
 PackageNameExpression = (Quote PackageName Quote / PackageName)
 PackageName = (Scope Slash PackageChars) {
-    log.Debug("👽 Package with Scope", string(c.text))
+    log.Debug("👽 Package with Scope: ", string(c.text))
     return string(c.text), nil
   } / PackageChars {
-    log.Debug("👽 Package", string(c.text))
+    log.Debug("👽 Package: ", string(c.text))
     return string(c.text), nil
   }
 
 
-VersionQueryExpression = (Quote VersionQuery Quote) / VersionQuery
+VersionQueryExpression =  (Quote NotQuote+ Quote) / (NotColonCommentOrEOL)+
 VersionExpression "a quoted version number" = (Quote version:Version Quote) {
-  log.Debug("👽 VersionExpression", version.(string))
+  log.Debug("👽 VersionExpression: ", version.(string))
   return version.(string), nil
 }
-Scope = Arobase ScopeChars
+Scope "a scope" = Arobase ScopeChars
 
 LCNM "an empty or commented line" = NewLine/CommentLine/(_+ NewLine)
 
@@ -109,15 +111,33 @@ Comment = Hash NotEOL
 PackageChars = UrlSafeCharNoDotNoUnderscore UrlSafeChar*
 ScopeChars = UrlSafeCharNoDotNoUnderscore UrlSafeChar*
 
-VersionQuery "a semver version query" = ([0-9^~<>!=xX*. |a-zA-Z]/"-")+
-Version "a version number" = ([0-9.+a-zA-Z]/"-")+ {
-  log.Debug("👽 Version", string(c.text))
+VersionQuery =  PathVersionQuery / SemverVersionQuery
+
+UrlVersionQuery = ExtendedUrlSafeChar+
+PathVersionQuery = PathOperator / PathSafeChar+
+SemverVersionQuery = (Digit / Alpha / VersionQueryWildcard / VersionPunctuation / VersionQueryOperator / VersionQuerySeparator )+
+
+NotQuote = [^"]
+NotCommentOrEOL = [^:#\r\n]
+NotColonCommentOrEOL = [^:#\r\n]
+PathOperator = "/"
+VersionQueryOperator = "^" / "~" / "<" / ">" / "=" / "!"
+VersionQuerySeparator = "|" / _
+VersionQueryWildcard = "x" / "X" / "*"
+
+Version "a version number" = (Digit / Alpha / VersionPunctuation)+ {
+  log.Debug("👽 Version: ", string(c.text))
   return string(c.text), nil
 }
+
+VersionPunctuation = "." / "-" / "+"
 
 Alpha = [a-zA-Z]
 Digit = [0-9]
 
+ExtendedUrlSafeChar = PathSafeChar / ":"
+PathSafeCharNoArobase = UrlSafeChar / "+" / "/" / "%"
+PathSafeChar = UrlSafeChar / "+" / "@" / "/" / "%"
 UrlSafeCharNoDotNoUnderscore = Alpha / Digit / "-" / "~"
 UrlSafeChar = Alpha / Digit / "-" / "." / "_" / "~"
 
@@ -128,7 +148,7 @@ Colon "a colon" = ":"
 Arobase "an arobase" = "@"
 Slash "a slash" = "/"
 
-NotEOL "any charchter but EOL/EOF" = [^\r\n]*
+NotEOL "any character but EOL/EOF" = [^\r\n]*
 EOL "End of Line (EOL) or End of File (EOF)" = NewLine / EOF
 NewLine = "\r\n" / "\n"
 
