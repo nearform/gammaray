@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestParseYarnLockHelloWorld(t *testing.T) {
@@ -76,6 +76,22 @@ func TestParseYarnLockInsecureProject(t *testing.T) {
 	fmt.Println("TestParseYarnLockInsecureProject result:", res, "\n", err)
 	if diff := cmp.Diff(len(res), 3); diff != "" {
 		t.Errorf("TestParseYarnLockInsecureProject: after ParseYarnLock : (-got +want)\n%s", diff)
+	}
+}
+
+func TestParseYarnNotInstalledInsecureComplexProject(t *testing.T) {
+	content, err := ioutil.ReadFile("../test_data/not-installed-insecure-complex-project/yarn.lock")
+	if err != nil {
+		t.Errorf("TestParseYarnNotInstalledInsecureComplexProject: could not open test data file: %q", err)
+	}
+
+	res, err := ParseYarnLock(string(content)) //, Debug(true))
+	if err != nil {
+		t.Errorf("TestParseYarnNotInstalledInsecureComplexProject: Error during parsing: %q", err)
+	}
+	fmt.Println("TestParseYarnNotInstalledInsecureComplexProject result:", res, "\n", err)
+	if diff := cmp.Diff(len(res), 245); diff != "" {
+		t.Errorf("TestParseYarnNotInstalledInsecureComplexProject: after ParseYarnLock : (-got +want)\n%s", diff)
 	}
 }
 
