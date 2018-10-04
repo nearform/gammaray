@@ -9,7 +9,6 @@ import (
 	"github.com/nearform/gammaray/analyzer"
 	"github.com/nearform/gammaray/docker"
 	"github.com/nearform/gammaray/nodepackage"
-	"github.com/nearform/gammaray/packagelockrunner"
 	"github.com/nearform/gammaray/pathrunner"
 	"github.com/nearform/gammaray/vulnfetcher"
 	"github.com/nearform/gammaray/yarnlockrunner"
@@ -95,10 +94,6 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 	if m.OnlyPackageLock == true {
 		walkers = []nodepackage.Walker{
 			pathrunner.PathRunner{},
-		}
-	} else if m.OnlyPackageLock == true {
-		walkers = []nodepackage.Walker{
-			packagelockrunner.PackageLockRunner{},
 		}
 	} else if m.OnlyYarnLock == true {
 		walkers = []nodepackage.Walker{
