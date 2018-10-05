@@ -93,7 +93,6 @@ func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) 
 		return nil, err
 	}
 	json.Unmarshal([]byte(ignoreAdvisoriesList), &advisories)
-	fmt.Printf("Advisories : %+v\n", advisories)
 
 	fmt.Println("🔍 Will scan folder <", path, ">")
 	if walkers == nil {
