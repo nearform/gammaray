@@ -197,5 +197,5 @@ func ScanImage(imageName string, projectPath string, walkers ...nodepackage.Walk
 	}
 
 	fmt.Println("🗃 Analyze package stored at <", imageProjectPath, "> in image <", imageName, ">...")
-	return analyzer.Analyze(path.Join(imageFolder, "snapshot", imageProjectPath), walkers...)
+	return analyzer.Analyze(path.Join(imageFolder, "snapshot", imageProjectPath), "", walkers...)
 }

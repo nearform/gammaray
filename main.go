@@ -25,6 +25,7 @@ type Args struct {
 	OnlyInstalled   bool   `help:"force only installed module checking usage (default false: use it as the main strategy then use other fallbacks)"`
 	OnlyPackageLock bool   `help:"force only <package-lock.json> usage (default false: use it as a fallback)"`
 	OnlyYarnLock    bool   `help:"force only <yarn.lock> usage (default false: use it as a fallback)"`
+	IgnoreList      string `help:"list of CVEs/CWEs to ignore"`
 }
 
 // Defaults generate default CLI values
@@ -38,6 +39,7 @@ func Defaults() *Args {
 		OnlyInstalled:   false,
 		OnlyPackageLock: false,
 		OnlyYarnLock:    false,
+		IgnoreList:      "",
 	}
 }
 
@@ -68,6 +70,11 @@ func (m *Args) getLogLevel() log.Level {
 	default:
 		return log.InfoLevel
 	}
+}
+
+func (m *Args) getIgnoreList() string {
+
+	return m.IgnoreList
 }
 
 // Run the program once CLI args are parsed
@@ -101,7 +108,7 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 		}
 	}
 	if m.Image == "" && m.Path != "" {
-		return analyzer.Analyze(m.Path, walkers...)
+		return analyzer.Analyze(m.Path, m.getIgnoreList(), walkers...)
 	} else if m.Image != "" {
 		if m.Path != "" {
 			fmt.Println("🔍 Will scan folder <", m.Path, "> from docker image <", m.Image, ">")
@@ -113,7 +120,7 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 	} else if len(os.Args) > 1 {
 		lastArg := os.Args[len(os.Args)-1]
 		fmt.Println("⚠ Will use the last argument <", lastArg, "> as '-path' value.")
-		return analyzer.Analyze(lastArg, walkers...)
+		return analyzer.Analyze(lastArg, m.getIgnoreList(), walkers...)
 	}
 	return nil, fmt.Errorf("you need to at least properly define a path or a docker image")
 }
