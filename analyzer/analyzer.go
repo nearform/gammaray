@@ -95,7 +95,8 @@ func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) 
 		}
 		json.Unmarshal([]byte(ignoreAdvisoriesList), &advisories)
 	} else {
-		advisories = []Advisory{}
+		var empty []Advisory
+		advisories = empty
 	}
 
 	fmt.Println("🔍 Will scan folder <", path, ">")
