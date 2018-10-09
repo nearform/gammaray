@@ -31,19 +31,21 @@ func runWalkers(path string, walkers []nodepackage.Walker) ([]nodepackage.NodePa
 	var errs []error
 	var mainPackage []nodepackage.NodePackage
 	for _, walker := range walkers {
-		packageList, err := walker.Walk(path)
-		if packageList != nil {
-			if len(packageList) > 1 {
-				return packageList, nil
+		if walker != nil {
+			packageList, err := walker.Walk(path)
+			if packageList != nil {
+				if len(packageList) > 1 {
+					return packageList, nil
+				}
+				// only found the main package, but no dependency using this method
+				// just continue with other ways to check if we find more
+				// can happen for example with pathrunner, if no 'npm i' has been done
+				mainPackage = packageList
 			}
-			// only found the main package, but no dependency using this method
-			// just continue with other ways to check if we find more
-			// can happen for example with pathrunner, if no 'npm i' has been done
-			mainPackage = packageList
-		}
-		if err != nil {
-			fmt.Println("⚠️", walker.ErrorContext(err), ":\n", err)
-			errs = append(errs, err)
+			if err != nil {
+				fmt.Println("⚠️", walker.ErrorContext(err), ":\n", err)
+				errs = append(errs, err)
+			}
 		}
 	}
 	if mainPackage != nil {
