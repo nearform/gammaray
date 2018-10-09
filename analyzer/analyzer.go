@@ -22,7 +22,7 @@ const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
 
 type Advisory struct {
 	CVE         string `json:"CVE"`
-	description string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 var advisories []Advisory
@@ -87,12 +87,16 @@ func stringInSlice(a string, list []Advisory) bool {
 // Analyze analyzes a path to an installed (npm install) node package
 func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
 
-	ignoreAdvisoriesList, err := ioutil.ReadFile(ignoreListPath)
-	if err != nil {
-		fmt.Printf("Error operning ignore list: %v", err)
-		return nil, err
+	if ignoreListPath != "" {
+		ignoreAdvisoriesList, err := ioutil.ReadFile(ignoreListPath)
+		if err != nil {
+			fmt.Printf("Error operning ignore list: %v", err)
+			return nil, err
+		}
+		json.Unmarshal([]byte(ignoreAdvisoriesList), &advisories)
+	} else {
+		advisories = []Advisory{}
 	}
-	json.Unmarshal([]byte(ignoreAdvisoriesList), &advisories)
 
 	fmt.Println("🔍 Will scan folder <", path, ">")
 	if walkers == nil {

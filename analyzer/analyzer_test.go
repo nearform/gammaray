@@ -1,14 +1,16 @@
 package analyzer
 
 import (
-	log "github.com/sirupsen/logrus"
 	"testing"
+
+	"github.com/nearform/gammaray/nodepackage"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestHelloWorld(t *testing.T) {
-	vulns, err := Analyze("../test_data/hello-world")
+	vulns, err := Analyze("../test_data/hello-world", "", []nodepackage.Walker{})
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +25,7 @@ func TestHelloWorld(t *testing.T) {
 }
 
 func TestInsecureProject(t *testing.T) {
-	vulns, err := Analyze("../test_data/insecure-project")
+	vulns, err := Analyze("../test_data/insecure-project", "", []nodepackage.Walker{})
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +42,7 @@ func TestInsecureProject(t *testing.T) {
 }
 
 func TestNotExistingProject(t *testing.T) {
-	_, err := Analyze("./does-not-exist")
+	_, err := Analyze("./does-not-exist", "", []nodepackage.Walker{})
 	if err == nil {
 		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
 	}
