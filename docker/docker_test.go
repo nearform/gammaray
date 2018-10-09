@@ -19,7 +19,8 @@ func TestCleanupInvalidFolder(t *testing.T) {
 }
 
 func TestScanImageHelloWorld(t *testing.T) {
-	vulns, err := ScanImage("gammaray-test-hello-world:1.0.0", "", nodepackage.Walker)
+	var walker nodepackage.Walker
+	vulns, err := ScanImage("gammaray-test-hello-world:1.0.0", "", walker)
 	if err != nil {
 		panic(err)
 	}
