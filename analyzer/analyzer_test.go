@@ -1,14 +1,17 @@
 package analyzer
 
 import (
-	log "github.com/sirupsen/logrus"
 	"testing"
+
+	"github.com/nearform/gammaray/nodepackage"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestHelloWorld(t *testing.T) {
-	vulns, err := Analyze("../test_data/hello-world")
+	var walkers []nodepackage.Walker
+	vulns, err := Analyze("../test_data/hello-world", "", walkers)
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +26,8 @@ func TestHelloWorld(t *testing.T) {
 }
 
 func TestInsecureProject(t *testing.T) {
-	vulns, err := Analyze("../test_data/insecure-project")
+	var walker nodepackage.Walker
+	vulns, err := Analyze("../test_data/insecure-project", "", walker)
 	if err != nil {
 		panic(err)
 	}
@@ -40,12 +44,12 @@ func TestInsecureProject(t *testing.T) {
 }
 
 func TestNotExistingProject(t *testing.T) {
-	_, err := Analyze("./does-not-exist")
+	var walker nodepackage.Walker
+	_, err := Analyze("./does-not-exist", "", walker)
 	if err == nil {
 		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
 	}
 	if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
 		t.Errorf("TestNotExistingProject: err : (-got +want)\n%s", diff)
 	}
-
 }

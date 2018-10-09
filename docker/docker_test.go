@@ -3,10 +3,12 @@ package docker
 import (
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/nearform/gammaray/nodepackage"
+	log "github.com/sirupsen/logrus"
 
 	docker "github.com/docker/docker/client"
 	"github.com/google/go-cmp/cmp"
@@ -17,7 +19,8 @@ func TestCleanupInvalidFolder(t *testing.T) {
 }
 
 func TestScanImageHelloWorld(t *testing.T) {
-	vulns, err := ScanImage("gammaray-test-hello-world:1.0.0", "")
+	var walker nodepackage.Walker
+	vulns, err := ScanImage("gammaray-test-hello-world:1.0.0", "", walker)
 	if err != nil {
 		panic(err)
 	}

@@ -1,8 +1,10 @@
 package analyzer
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/nearform/gammaray/nodepackage"
 	"github.com/nearform/gammaray/packagelockrunner"
@@ -17,6 +19,13 @@ import (
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
 const OSSIndexURL = "https://ossindex.net/api/v3/component-report"
 const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
+
+type Advisory struct {
+	CVE         string `json:"CVE"`
+	Description string `json:"description,omitempty"`
+}
+
+var advisories []Advisory
 
 func runWalkers(path string, walkers []nodepackage.Walker) ([]nodepackage.NodePackage, error) {
 	var errs []error
@@ -66,8 +75,29 @@ func packagesCleanupAndDeduplication(packageList []nodepackage.NodePackage) []no
 	return packages
 }
 
+func stringInSlice(a string, list []Advisory) bool {
+	for _, b := range list {
+		if b.CVE == a {
+			return true
+		}
+	}
+	return false
+}
+
 // Analyze analyzes a path to an installed (npm install) node package
-func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
+func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
+
+	if ignoreListPath != "" {
+		ignoreAdvisoriesList, err := ioutil.ReadFile(ignoreListPath)
+		if err != nil {
+			fmt.Printf("Error operning ignore list: %v", err)
+			return nil, err
+		}
+		json.Unmarshal([]byte(ignoreAdvisoriesList), &advisories)
+	} else {
+		advisories = []Advisory{}
+	}
+
 	fmt.Println("🔍 Will scan folder <", path, ">")
 	if walkers == nil {
 		walkers = []nodepackage.Walker{
@@ -107,20 +137,22 @@ func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.Vulnerabil
 		var pkg string
 		var pkgversion string
 		for _, vulnerability := range vulnerabilitiesOSS {
-			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
-				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
-			}
-			pkg = vulnerability.Package
-			pkgversion = vulnerability.PackageVersion
+			if !stringInSlice(vulnerability.CVE, advisories) && !stringInSlice(vulnerability.CVE, advisories) {
+				if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
+					fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
+				}
+				pkg = vulnerability.Package
+				pkgversion = vulnerability.PackageVersion
 
-			fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
-			fmt.Printf("\t\t\tCVE: %s\n\t\t\tCWE: %s\n\t\t\tTitle: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
-				vulnerability.CVE,
-				vulnerability.CWE,
-				vulnerability.Title,
-				vulnerability.Description,
-				vulnerability.References,
-			)
+				fmt.Printf("\t\t- Vulnerability (OSS Index):\n")
+				fmt.Printf("\t\t\tCVE: %s\n\t\t\tCWE: %s\n\t\t\tTitle: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
+					vulnerability.CVE,
+					vulnerability.CWE,
+					vulnerability.Title,
+					vulnerability.Description,
+					vulnerability.References,
+				)
+			}
 		}
 	} else {
 		fmt.Println("✅ No Vulnerability found by OSS Index")
@@ -135,20 +167,22 @@ func Analyze(path string, walkers ...nodepackage.Walker) (vulnfetcher.Vulnerabil
 		var pkg string
 		var pkgversion string
 		for _, vulnerability := range vulnerabilitiesNodeSWG {
-			if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
-				fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
+			if !stringInSlice(vulnerability.CVE, advisories) && !stringInSlice(vulnerability.CVE, advisories) {
+				if vulnerability.Package != pkg && vulnerability.PackageVersion != pkgversion {
+					fmt.Printf("\t📦 Package: %s (%s)\n", vulnerability.Package, vulnerability.PackageVersion)
+				}
+				pkg = vulnerability.Package
+				pkgversion = vulnerability.PackageVersion
+				fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
+				fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tVersions: %s\n\t\t\tFixed: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
+					vulnerability.CVE,
+					vulnerability.Title,
+					vulnerability.Versions,
+					vulnerability.Fixed,
+					vulnerability.Description,
+					vulnerability.References,
+				)
 			}
-			pkg = vulnerability.Package
-			pkgversion = vulnerability.PackageVersion
-			fmt.Printf("\t\t- Vulnerability (Node Security Working Group):\n")
-			fmt.Printf("\t\t\tCVE: %s\n\t\t\tTitle: %s\n\t\t\tVersions: %s\n\t\t\tFixed: %s\n\t\t\tDescription: %s\n\t\t\tMore Info: [%s]\n",
-				vulnerability.CVE,
-				vulnerability.Title,
-				vulnerability.Versions,
-				vulnerability.Fixed,
-				vulnerability.Description,
-				vulnerability.References,
-			)
 		}
 	} else {
 		fmt.Println("✅ No Vulnerability found by Node Security Working Group")

@@ -2,27 +2,34 @@
 
 
 [[projects]]
+  digest = "1:b856d8248663c39265a764561c1a1a149783f6cc815feb54a1f3a591b91f6eca"
   name = "github.com/Masterminds/semver"
   packages = ["."]
+  pruneopts = ""
   revision = "c7af12943936e8c39859482e61f0574c2fd7fc75"
   version = "v1.4.2"
 
 [[projects]]
+  digest = "1:45ec6eb579713a01991ad07f538fed3b576ee55f5ce9f248320152a9270d9258"
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
+  pruneopts = ""
   revision = "a6d595ae73cf27a1b8fc32930668708f45ce1c85"
   version = "v0.4.9"
 
 [[projects]]
+  digest = "1:a9e4ff75555e4500e409dc87c1d708b090bb8dd77f889bbf266773f3dc23af70"
   name = "github.com/docker/distribution"
   packages = [
     "digest",
-    "reference"
+    "reference",
   ]
+  pruneopts = ""
   revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
   version = "v2.6.2"
 
 [[projects]]
+  digest = "1:a60acfb78bd12ce7b2101f0cc0bca8cd83db6aa60bf1e6ddfd33e83013083ddf"
   name = "github.com/docker/docker"
   packages = [
     "api/types",
@@ -40,96 +47,129 @@
     "api/types/versions",
     "api/types/volume",
     "client",
-    "pkg/tlsconfig"
+    "pkg/tlsconfig",
   ]
+  pruneopts = ""
   revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
   version = "v1.13.1"
 
 [[projects]]
+  digest = "1:ebe593d8b65a2947b78b6e164a2dac1a230b977a700b694da3a398b03b7afb04"
   name = "github.com/docker/go-connections"
   packages = [
     "nat",
     "sockets",
-    "tlsconfig"
+    "tlsconfig",
   ]
+  pruneopts = ""
   revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
   version = "v0.4.0"
 
 [[projects]]
+  digest = "1:582d54fcb7233da8dde1dfd2210a5b9675d0685f84246a8d317b07d680c18b1b"
   name = "github.com/docker/go-units"
   packages = ["."]
+  pruneopts = ""
   revision = "47565b4f722fb6ceae66b95f853feed578a4a51c"
   version = "v0.3.3"
 
 [[projects]]
+  digest = "1:8cbec7bf3e410d31304b2e2ff56b83b7f4a637fc0ce1c375b6c5fd14d67e94f1"
   name = "github.com/gen2brain/go-unarr"
   packages = ["."]
+  pruneopts = ""
   revision = "2adf16213a3c6333c47708458fe777f9e193e396"
 
 [[projects]]
+  digest = "1:f9f45f75f332e03fc7e9fe9188ea4e1ce4d14779ef34fa1b023da67518e36327"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
     "cmp/internal/diff",
     "cmp/internal/function",
-    "cmp/internal/value"
+    "cmp/internal/value",
   ]
+  pruneopts = ""
   revision = "3af367b6b30c263d47e8895973edcca9a49cf029"
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:188943f91b6136f1ac372d80684d4989b7ccbdb2bf6d640bc6f9905a440b11e7"
   name = "github.com/jaffee/commandeer"
   packages = ["."]
+  pruneopts = ""
   revision = "d0012ff26169b05dca5c14910d9415ae389efb8e"
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = ""
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:3fcbf733a8d810a21265a7f2fe08a3353db2407da052b233f8b204b5afc03d9b"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
+  pruneopts = ""
   revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
   version = "v1.0.6"
 
 [[projects]]
+  digest = "1:465bf1bbbbb25848c6365a4bf50ccea92abfc1656aaacd0e3781ce57d0e7addc"
   name = "github.com/spacemeshos/go-spacemesh"
   packages = ["assert"]
+  pruneopts = ""
   revision = "f4a642e43d5bee3f8acf4f413d8c49e0fadd1d2e"
   version = "v0.3"
 
 [[projects]]
   branch = "master"
+  digest = "1:4cae11053a5fc8e7b08228fcc14d161d3e60b64ba508a8b216937da472690991"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
+  pruneopts = ""
   revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
+  digest = "1:be23bbce7dc7ac277c5914a43e2dafe81b0f1feda1451334de6cc28b921a2ab2"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "internal/socks",
-    "proxy"
+    "proxy",
   ]
+  pruneopts = ""
   revision = "49c15d80dfbc983ea25246ee959d970efe09ec09"
 
 [[projects]]
   branch = "master"
+  digest = "1:dd631ee90bd2e7aa16b6e094217d77a797684b52811374c948c695cbb46b5bbb"
   name = "golang.org/x/sys"
   packages = [
     "unix",
-    "windows"
+    "windows",
   ]
+  pruneopts = ""
   revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "02d08daf6c051d6bbb5bbed7af6a8f379621812bd23b074071f61419e35683bb"
+  input-imports = [
+    "github.com/Masterminds/semver",
+    "github.com/docker/docker/api/types",
+    "github.com/docker/docker/client",
+    "github.com/gen2brain/go-unarr",
+    "github.com/google/go-cmp/cmp",
+    "github.com/jaffee/commandeer",
+    "github.com/sirupsen/logrus",
+    "github.com/spacemeshos/go-spacemesh/assert",
+    "golang.org/x/net/context",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

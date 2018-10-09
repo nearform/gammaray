@@ -30,6 +30,23 @@ Gammaray comes as a single binary so you only need to run it passing your projec
 $> gammaray <path-to-your-node-app>
 ```
 
+Gammaray supports the following flags:
+
+`-path` - path to directory where package.json is located
+
+`-image` - docker image to scan
+
+`-log-level` - valid values: `panic` | `fatal` | `error` | `warn` | `info` | `debug`. The default is `info`.
+
+`-ignore-list` - path to JSON file with CVE/CWE ignore array
+The sample file is shown below:
+```
+[
+  {"CVE": "CWE-400", "description": "We ignore this because it does not affect us"},
+  {"CVE": "CVE-2015-8851", "description": "We ignore this because it does not affect us"}
+]
+```
+
 And that is all, all the vulnerabilities that affect your packages will be displayed.
 
 ## Contributing
