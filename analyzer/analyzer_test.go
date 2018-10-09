@@ -10,8 +10,8 @@ import (
 )
 
 func TestHelloWorld(t *testing.T) {
-	var walker nodepackage.Walker
-	vulns, err := Analyze("../test_data/hello-world", "", walker)
+	var walkers []nodepackage.Walker
+	vulns, err := Analyze("../test_data/hello-world", "", walkers)
 	if err != nil {
 		panic(err)
 	}
