@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nearform/gammaray/nodepackage"
+	"github.com/nearform/gammaray/pathrunner"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/go-cmp/cmp"
@@ -26,8 +27,10 @@ func TestHelloWorld(t *testing.T) {
 }
 
 func TestInsecureProject(t *testing.T) {
-	var walker nodepackage.Walker
-	vulns, err := Analyze("../test_data/insecure-project", "", walker)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	vulns, err := Analyze("../test_data/insecure-project", "", walkers...)
 	if err != nil {
 		panic(err)
 	}
