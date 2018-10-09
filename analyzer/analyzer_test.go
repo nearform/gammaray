@@ -11,8 +11,10 @@ import (
 )
 
 func TestHelloWorld(t *testing.T) {
-	var walker nodepackage.Walker
-	vulns, err := Analyze("../test_data/hello-world", "", walker)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	vulns, err := Analyze("../test_data/hello-world", "", walkers...)
 	if err != nil {
 		panic(err)
 	}
@@ -47,8 +49,10 @@ func TestInsecureProject(t *testing.T) {
 }
 
 func TestNotExistingProject(t *testing.T) {
-	var walker nodepackage.Walker
-	_, err := Analyze("./does-not-exist", "", walker)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	_, err := Analyze("./does-not-exist", "", walkers...)
 	if err == nil {
 		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
 	} else if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
