@@ -4,14 +4,17 @@ import (
 	"testing"
 
 	"github.com/nearform/gammaray/nodepackage"
+	"github.com/nearform/gammaray/pathrunner"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestHelloWorld(t *testing.T) {
-	var walkers []nodepackage.Walker
-	vulns, err := Analyze("../test_data/hello-world", "", walkers)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	vulns, err := Analyze("../test_data/hello-world", "", walkers...)
 	if err != nil {
 		panic(err)
 	}
@@ -26,8 +29,10 @@ func TestHelloWorld(t *testing.T) {
 }
 
 func TestInsecureProject(t *testing.T) {
-	var walker nodepackage.Walker
-	vulns, err := Analyze("../test_data/insecure-project", "", walker)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	vulns, err := Analyze("../test_data/insecure-project", "", walkers...)
 	if err != nil {
 		panic(err)
 	}
@@ -44,12 +49,13 @@ func TestInsecureProject(t *testing.T) {
 }
 
 func TestNotExistingProject(t *testing.T) {
-	var walker nodepackage.Walker
-	_, err := Analyze("./does-not-exist", "", walker)
+	walkers := []nodepackage.Walker{
+		pathrunner.PathRunner{},
+	}
+	_, err := Analyze("./does-not-exist", "", walkers...)
 	if err == nil {
 		t.Errorf("TestNotExistingProject: ./does-not-exist does not exist, it should not be analyzed !")
-	}
-	if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
+	} else if diff := cmp.Diff(err.Error(), "could not find any dependencies and all strategies to find them failed"); diff != "" {
 		t.Errorf("TestNotExistingProject: err : (-got +want)\n%s", diff)
 	}
 }
