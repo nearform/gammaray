@@ -2,12 +2,13 @@ package ossvulnfetcher
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/nearform/gammaray/nodepackage"
-	"github.com/spacemeshos/go-spacemesh/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseCVEFromTitleWithCVEContainingTitle(t *testing.T) {
@@ -57,13 +58,13 @@ func TestParseCWEFromTitleWithoutCWEContainingTitle(t *testing.T) {
 func TestTestExistingPackageWithoutCVE(t *testing.T) {
 	fetcher := New("https://ossindex.net/api/v3/component-report")
 	err := fetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	var packages []nodepackage.NodePackage
 	packages = append(packages, nodepackage.NodePackage{Name: "request", Version: "1.0.0"})
 	log.Print("packages:", packages)
 	vulnerabilities, err := fetcher.TestAll(packages)
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	log.Print(vulnerabilities)
 	if diff := cmp.Diff(len(vulnerabilities), 1); diff != "" {
@@ -78,11 +79,11 @@ func TestTestExistingPackageWithoutCVE(t *testing.T) {
 func TestTestExistingPackageWithCVE(t *testing.T) {
 	fetcher := New("https://ossindex.net/api/v3/component-report")
 	err := fetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	var packages []nodepackage.NodePackage
 	vulnerabilities, err := fetcher.TestAll(append(packages, nodepackage.NodePackage{Name: "bassmaster", Version: "1.0.0"}))
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	log.Print(vulnerabilities)
 	if diff := cmp.Diff(len(vulnerabilities), 1); diff != "" {
@@ -103,11 +104,11 @@ func TestTestExistingPackageWithCVE(t *testing.T) {
 func TestTestExistingPackageHavingNamespaceAndNoKnownVulns(t *testing.T) {
 	fetcher := New("https://ossindex.net/api/v3/component-report")
 	err := fetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	var packages []nodepackage.NodePackage
 	vulnerabilities, err := fetcher.TestAll(append(packages, nodepackage.NodePackage{Name: "@babel/code-frame", Version: "7.0.0-beta.47"}))
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	log.Print(vulnerabilities)
 	if diff := cmp.Diff(len(vulnerabilities), 0); diff != "" {
@@ -119,11 +120,11 @@ func TestTestExistingPackageHavingNamespaceAndNoKnownVulns(t *testing.T) {
 func TestTestEmptyPackageList(t *testing.T) {
 	fetcher := New("https://ossindex.net/api/v3/component-report")
 	err := fetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	var packages []nodepackage.NodePackage
 	vulnerabilities, err := fetcher.TestAll(packages)
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	log.Print(vulnerabilities)
 	if diff := cmp.Diff(len(vulnerabilities), 0); diff != "" {

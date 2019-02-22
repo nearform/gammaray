@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/nearform/gammaray/nodepackage"
-	"github.com/spacemeshos/go-spacemesh/assert"
 )
 
 func TestFetch(t *testing.T) {
@@ -19,14 +20,14 @@ func TestFetch(t *testing.T) {
 	defer server.Close()
 	nodeFetcher := New(server.URL)
 	err := nodeFetcher.Fetch()
-	assert.NoErr(t, err)
-	assert.Equal(t, 1, len(nodeFetcher.vulnerabilities), "number of vulns")
+	assert.NoError(t, err)
+	assert.Len(t, nodeFetcher.vulnerabilities, 1, "number of vulns")
 }
 
 func TestFetchNoServer(t *testing.T) {
 	nodeFetcher := New("weeeee")
 	err := nodeFetcher.Fetch()
-	assert.Err(t, err)
+	assert.Error(t, err)
 }
 
 func TestTestExistingPackage(t *testing.T) {
@@ -37,10 +38,10 @@ func TestTestExistingPackage(t *testing.T) {
 	)
 	nodeFetcher := New(server.URL)
 	err := nodeFetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	vulnerabilities, err := nodeFetcher.Test(nodepackage.NodePackage{Name: "bassmaster", Version: "1.0"})
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(vulnerabilities), "number of vulns")
 	assert.Equal(t, "CVE-2014-7205", vulnerabilities[0].CVE, "CVE")
 	assert.Equal(t, "Arbitrary JavaScript Execution", vulnerabilities[0].Title, "Title")
@@ -57,10 +58,10 @@ func TestTestExistingPackageWithFixedVersion(t *testing.T) {
 	)
 	nodeFetcher := New(server.URL)
 	err := nodeFetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	vulnerabilities, err := nodeFetcher.Test(nodepackage.NodePackage{Name: "bassmaster", Version: "1.6.0"})
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(vulnerabilities), "number of vulns")
 }
 
@@ -72,9 +73,9 @@ func TestTestUnexistingPackage(t *testing.T) {
 	)
 	nodeFetcher := New(server.URL)
 	err := nodeFetcher.Fetch()
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 
 	vulnerabilities, err := nodeFetcher.Test(nodepackage.NodePackage{Name: "test", Version: "unexisting"})
-	assert.NoErr(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(vulnerabilities), "number of vulns")
 }

@@ -53,23 +53,12 @@ func main() {
 }
 
 func (m *Args) getLogLevel() log.Level {
-
-	switch strings.ToLower(strings.TrimSpace(m.LogLevel)) {
-	case "panic":
-		return log.PanicLevel
-	case "fatal":
-		return log.FatalLevel
-	case "error":
-		return log.ErrorLevel
-	case "warn":
-		return log.WarnLevel
-	case "info":
-		return log.InfoLevel
-	case "debug":
+	level, err := log.ParseLevel(strings.ToLower(m.LogLevel))
+	if err != nil {
+		log.Errorf("log level %s not found, defaulting to 'debug'", m.LogLevel)
 		return log.DebugLevel
-	default:
-		return log.InfoLevel
 	}
+	return level
 }
 
 func (m *Args) getIgnoreList() string {
@@ -97,6 +86,7 @@ func (m *Args) Run() error {
 
 // Analyze the path or docker image for vulnerabilities
 func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
+
 	var walkers []nodepackage.Walker
 	if m.OnlyPackageLock == true {
 		walkers = []nodepackage.Walker{
@@ -107,6 +97,7 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 			yarnlockrunner.YarnLockRunner{},
 		}
 	}
+
 	if m.Image == "" && m.Path != "" {
 		return analyzer.Analyze(m.Path, m.getIgnoreList(), walkers...)
 	} else if m.Image != "" {
