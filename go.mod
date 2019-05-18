@@ -1,4 +1,4 @@
-module gammaray
+module github.com/nearform/gammaray
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -7,7 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.9
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/distribution v2.6.2+incompatible
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
@@ -25,7 +25,6 @@ require (
 	github.com/mgechev/dots v0.0.0-20181228164730-18fa4c4b71cc // indirect
 	github.com/mgechev/revive v0.0.0-20190124171443-202adf078678 // indirect
 	github.com/mna/pigeon v1.0.0 // indirect
-	github.com/nearform/gammaray v0.0.0-20181023151042-754a9e439d1f
 	github.com/nightlyone/lockfile v0.0.0-20180618180623-0ad87eef1443 // indirect
 	github.com/olekukonko/tablewriter v0.0.1 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
