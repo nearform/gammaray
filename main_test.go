@@ -41,9 +41,10 @@ func TestHelloWorld(t *testing.T) {
 func TestInsecureProject(t *testing.T) {
 	defer cleanLogs()
 	err := (&Args{
-		Image:   "",
-		LogFile: testLogFile,
-		Path:    "test_data/insecure-project",
+		Image:    "",
+		LogFile:  testLogFile,
+		Path:     "test_data/insecure-project",
+		LogLevel: "info",
 	}).Run()
 	if err != nil {
 		t.Error(err)
