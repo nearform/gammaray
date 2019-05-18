@@ -42,11 +42,10 @@ func New(URL string) *Fetcher {
 func (n *Fetcher) Fetch() error {
 	tmpDir := path.Join(os.TempDir(), base64.StdEncoding.EncodeToString([]byte(n.DatabaseURL)))
 	os.Mkdir(tmpDir, os.ModePerm)
-
 	log.Info("Temporary directory for NodeSWG Database <", n.DatabaseURL, ">:\n", tmpDir)
 	destFilePath := path.Join(tmpDir, "nodeswg.zip")
 	unzipFolder := path.Join(tmpDir, "nodeswg")
-	vulnFolder := path.Join(unzipFolder, "security-wg-master", "vuln", "npm")
+	vulnFolder := path.Join(unzipFolder, "security-advisories-master", "ecosystem")
 
 	os.Mkdir(unzipFolder, os.ModePerm)
 
@@ -79,9 +78,7 @@ func (n *Fetcher) Fetch() error {
 	if err != nil {
 		return err
 	}
-
 	err = filepath.Walk(vulnFolder, func(path string, f os.FileInfo, err error) error {
-
 		if strings.HasSuffix(path, ".json") {
 			log.Debugln("Opening NodeSWG Database file <", path, ">")
 			jsonFile, err := os.Open(path)

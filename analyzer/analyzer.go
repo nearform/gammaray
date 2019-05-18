@@ -18,8 +18,9 @@ import (
 
 // OSSIndexURL URL for OSSIndex. Is not a hardcoded value to facilitate testing.
 const OSSIndexURL = "https://ossindex.net/api/v3/component-report"
-const nodeswgURL = "https://github.com/nodejs/security-wg/archive/master.zip"
+const nodeswgURL = "https://github.com/nodejs/security-advisories/archive/master.zip"
 
+// Advisory struct to hold description + CVE
 type Advisory struct {
 	CVE         string `json:"CVE"`
 	Description string `json:"description,omitempty"`
@@ -88,7 +89,6 @@ func stringInSlice(a string, list []Advisory) bool {
 
 // Analyze analyzes a path to an installed (npm install) node package
 func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) (vulnfetcher.VulnerabilityReport, error) {
-
 	if ignoreListPath != "" {
 		ignoreAdvisoriesList, err := ioutil.ReadFile(ignoreListPath)
 		if err != nil {
@@ -123,7 +123,6 @@ func Analyze(path string, ignoreListPath string, walkers ...nodepackage.Walker) 
 	if err != nil {
 		return nil, err
 	}
-
 	nodeswgFetcher := nodeswg.New(nodeswgURL)
 	err = nodeswgFetcher.Fetch()
 	if err != nil {

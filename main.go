@@ -86,7 +86,6 @@ func (m *Args) Run() error {
 
 // Analyze the path or docker image for vulnerabilities
 func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
-
 	var walkers []nodepackage.Walker
 	if m.OnlyPackageLock == true {
 		walkers = []nodepackage.Walker{
@@ -97,7 +96,6 @@ func (m *Args) Analyze() (vulnfetcher.VulnerabilityReport, error) {
 			yarnlockrunner.YarnLockRunner{},
 		}
 	}
-
 	if m.Image == "" && m.Path != "" {
 		return analyzer.Analyze(m.Path, m.getIgnoreList(), walkers...)
 	} else if m.Image != "" {
